@@ -43,7 +43,6 @@ class Player:
 			vlc_args.append('-' + 'v' * verbosity_level)
 		logger.debug('Init new VLC player with args %s ...', str(vlc_args))
 		self._vlc_instance: Instance = vlc.Instance(vlc_args)
-		self._vlc_instance.
 		self._vlc_player: MediaPlayer = self._vlc_instance.media_player_new()
 		logger.info('VLC player created. Player: %s', self._vlc_player)
 		from player.Track import NullTrack, TrackStatus
