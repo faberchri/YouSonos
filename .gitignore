@@ -1,3 +1,4 @@
 client/node_modules
 player/__pycache__
 __pycache__
+client/build
