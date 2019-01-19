@@ -8,19 +8,21 @@ from typing import NoReturn
 from Constants import ServerLoggerName, PlayerLoggerName
 
 
-def init_logging(parsed_args: Namespace, prefix: str):
+def init_logging(parsed_args: Namespace):
 	import logging
 	log_level = logging.WARN
 	if parsed_args.verbose > 0:
 		log_level = logging.INFO
 	if parsed_args.verbose > 1:
 		log_level = logging.DEBUG
-	logging.basicConfig(level=log_level, format='%(asctime)s - ' + prefix + ' - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+	logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 	# prevent spamming of log on info level from engineio and socketio
 	if log_level == logging.INFO:
 		[logger.setLevel(logging.WARN) for logger in [logging.getLogger(ServerLoggerName.ENGINEIO.value),
-													  logging.getLogger(ServerLoggerName.SOCKETIO.value)]]
+													  logging.getLogger(ServerLoggerName.SOCKETIO.value),
+													  logging.getLogger(PlayerLoggerName.SOCKETIO.value),
+													  logging.getLogger('soco')]]
 	return logging
 
 
@@ -36,7 +38,7 @@ def parse_args() -> Namespace:
 
 
 def player_main(parsed_args: Namespace) -> None:
-	logging= init_logging(parsed_args, 'PLAYER')
+	logging= init_logging(parsed_args)
 	main_logger = logging.getLogger(PlayerLoggerName.MAIN.value)
 	main_logger.info('Starting youSonos player ...')
 	from player import SonosEnvironment, Player, Track, Playlist, EventConsumer
@@ -52,7 +54,7 @@ def player_main(parsed_args: Namespace) -> None:
 
 
 def server_main(parsed_args: Namespace) -> NoReturn:
-	logging = init_logging(parsed_args, 'SERVER')
+	logging = init_logging(parsed_args)
 	main_logger = logging.getLogger(ServerLoggerName.MAIN.value)
 	main_logger.info('Starting youSonos server ...')
 	import eventlet
