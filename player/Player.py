@@ -52,7 +52,6 @@ class Player:
 		self._update_player_state(PlayerStatus.STOPPED)
 		self._init_track_end_callback()
 		self._init_player_time_callback()
-		self._vlc_player.event_manager
 
 	def get_null_track(self) -> Track:
 		return self._null_track
