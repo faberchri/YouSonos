@@ -6,11 +6,11 @@ import List from '@material-ui/icons/List';
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import SearchInput from './SearchInput'
 import Playlist from "./Playlist";
 import Divider from '@material-ui/core/Divider';
 import Badge from '@material-ui/core/Badge';
 import {playlistChanged, PlaylistItem} from "./api";
+import SearchControl from "./SearchControl";
 
 
 var SwipeableViews = require('react-swipeable-views').default;
@@ -93,7 +93,7 @@ class SearchAndManageTracks extends React.Component<Props, State> {
                     className={classes.slideContainer}
                     slideStyle={{display: 'flex', flexFlow: 'column'}}
                 >
-                    <SearchInput/>
+                    <SearchControl />
                     <Playlist />
                 </SwipeableViews>
             </Paper>
