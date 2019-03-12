@@ -246,7 +246,7 @@ class TrackFactory:
 			return [YouTubeTrack(self._player, TrackStatus.STOPPED, pafy_data)]
 		except Exception:
 			pass
-		logger.warning('Neither a YouTube playlist nor a single YouTube video was found at : %s', preprocessed_url)
+		logger.warning('Neither a YouTube playlist nor a single YouTube video was found at \'%s\'', preprocessed_url)
 		return []
 
 	def _preprocess_youtube_url(self, url: str) -> str:
