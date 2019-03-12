@@ -56,7 +56,10 @@ class SonosEnvironment(StreamConsumer):
 			logger.debug('Sonos coordinator (%s) started playing URL %s', sonos_coordinator, stream_url)
 
 	def _find_sonos_devices(self) -> Dict[str, Any]:
-		sonos_devices = dict(map(lambda x: (x.player_name, x), soco.discover()))
+		discovered = soco.discover()
+		if not discovered:
+			raise ValueError('No Sonos zones found.')
+		sonos_devices = dict(map(lambda zone: (zone.player_name, zone), discovered))
 		if not sonos_devices:
 			raise ValueError('No Sonos devices found.')
 		logger.info('Found Sonos devices: %s', sonos_devices)
