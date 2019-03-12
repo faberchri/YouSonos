@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from concurrent.futures.thread import ThreadPoolExecutor
+
 import logging
 import uuid
 from enum import Enum, unique
@@ -124,9 +126,12 @@ class PlaylistEntryFactory:
 		return PlaylistEntry(self._track_factory.create_youtube_track(url), PlaylistEntryStatus.WAITING, uuid.uuid4())
 
 	def playlist_entries_from_props_list(self, playlist_entry_dicts: []) -> [PlaylistEntry]:
-		playlist_entries = []
-		for playlist_entry_dict in playlist_entry_dicts:
-			track_dict = playlist_entry_dict[TRACK]
-			track = self._track_factory.track_from_dict(track_dict)
-			playlist_entries.append(PlaylistEntry(track, PlaylistEntryStatus(playlist_entry_dict[STATUS]), UUID(playlist_entry_dict[ID])))
-		return playlist_entries
+		executor = ThreadPoolExecutor(max_workers=100, thread_name_prefix='PlayListLoaderThread')
+		futures = [executor.submit(self._load_playlist_entry_from_property_dict, playlist_entry_dict) for playlist_entry_dict in playlist_entry_dicts]
+		executor.shutdown()
+		return [future.result() for future in futures]
+
+	def _load_playlist_entry_from_property_dict(self, playlist_entry_dict: {}) -> PlaylistEntry:
+		track_dict = playlist_entry_dict[TRACK]
+		track = self._track_factory.track_from_dict(track_dict)
+		return PlaylistEntry(track, PlaylistEntryStatus(playlist_entry_dict[STATUS]), UUID(playlist_entry_dict[ID]))
