@@ -1,4 +1,3 @@
-import concurrent.futures
 import json
 import logging
 import threading
@@ -11,6 +10,7 @@ from Constants import General, ReceiveEvent, SendEvent, PlayerLoggerName
 from player.Player import Player
 from player.Playlist import Playlist
 from player.PlaylistEntry import ID
+from player.SearchService import SearchService
 from player.SonosEnvironment import SonosEnvironment
 from player.Track import URL, TrackFactory, Track
 from . import emit
@@ -90,19 +90,12 @@ class PlayerEventsConsumer(EventConsumer):
 
 class SearchEventConsumer(EventConsumer):
 
-	def __init__(self, track_factory: TrackFactory):
+	def __init__(self, search_service: SearchService):
 		super().__init__(General.QUEUE_CHANNEL_NAME_SEARCH)
-		self._track_factory = track_factory
-		self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=20)
+		self._search_service = search_service
 
 	def run_event(self, event: ReceiveEvent, sid: str, payload: Any):
 		if event == ReceiveEvent.SEARCH_TRACKS:
-			self.handle_search_tracks(payload[URL], sid)
-
-	def handle_search_tracks(self, url: str, sid: str):
-		tracks = self._track_factory.create_youtube_tracks(url)
-		emit(SendEvent.SEARCH_RESULTS, self.load_property_dicts(tracks), sid=sid)
-
-	def load_property_dicts(self, tracks: [Track]):
-		futures = [self.executor.submit(track.get_property_dict) for track in tracks]
-		return [future.result() for future in futures]
+			self._search_service.run_search(payload[URL], sid)
+		if event == ReceiveEvent.CANCEL_SEARCH:
+			self._search_service.cancel_search(sid)

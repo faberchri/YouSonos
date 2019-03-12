@@ -14,6 +14,7 @@ interface State {
 const styles = (theme: Theme) => createStyles({});
 
 interface Props extends WithStyles<typeof styles> {
+    key: number;
     currentTrack: Track;
     searchResultTrack: Track;
     playlistTrackUrls: ReadonlySet<string>;

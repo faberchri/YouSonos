@@ -17,6 +17,9 @@ const styles = (theme: Theme) => createStyles({
         width: '100%',
         marginTop: '12px',
         marginBottom: '8px',
+    },
+    circularProgress: {
+        position: 'absolute'
     }
 });
 
@@ -45,7 +48,14 @@ class SearchInputField extends React.Component<Props, State> {
         let textFieldAction;
         if (this.props.indicateSearchRunning) {
             textFieldAction =
-                <CircularProgress size={30} />
+                <div>
+                    <CircularProgress size={46} className={classes.circularProgress} />
+                    <IconButton
+                        aria-label="clear input"
+                        onClick={this.props.onFieldReset}>
+                            <Clear/>
+                    </IconButton>
+                </div>
         } else {
             if (this.props.searchString.length > 0) {
                 textFieldAction =

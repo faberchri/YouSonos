@@ -1,5 +1,5 @@
 import React from "react";
-import {currentTrack, NULL_TRACK, playlistChanged, PlaylistItem, searchResults, Track} from "./api";
+import {currentTrack, NULL_TRACK, playlistChanged, PlaylistItem, SearchResult, searchResults, Track} from "./api";
 import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/styles";
 import List from '@material-ui/core/List';
 import SearchResultEntry from "./SearchResultEntry";
@@ -40,9 +40,9 @@ class SearchResultList extends React.Component<Props, State> {
         currentTrack(this.setCurrentTrack)
     }
 
-    setSearchResults(searchResultTracks: Track[]) {
+    setSearchResults(searchResult: SearchResult) {
         this.setState({
-            searchResultTracks: searchResultTracks,
+            searchResultTracks: searchResult.results,
             playlistTrackUrls: this.state.playlistTrackUrls,
             currentTrack: this.state.currentTrack,
         });
@@ -71,7 +71,8 @@ class SearchResultList extends React.Component<Props, State> {
 
         return (
             <List dense className={classes.list}>
-                {this.state.searchResultTracks.map(searchResultTrack => <SearchResultEntry
+                {this.state.searchResultTracks.map((searchResultTrack, index) => <SearchResultEntry
+                    key={index}
                     searchResultTrack={searchResultTrack}
                     currentTrack={this.state.currentTrack}
                     playlistTrackUrls={this.state.playlistTrackUrls}/>)}

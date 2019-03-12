@@ -1,5 +1,5 @@
 import React from "react";
-import {searchResults, searchTracks, Track} from "./api";
+import {cancelSearch, SearchResult, searchResults, searchTracks, Track} from "./api";
 import {Subject, timer} from "rxjs";
 import {debounce} from "rxjs/operators";
 import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/styles";
@@ -9,7 +9,8 @@ import SearchInputField from "./SearchInputField";
 interface State {
     searchString: string;
     indicateError: boolean,
-    indicateSearchRunning: boolean
+    indicateSearchRunning: boolean,
+    searchHitCount: number
 }
 
 const styles = (theme: Theme) => createStyles({
@@ -38,7 +39,8 @@ class SearchControl extends React.Component<Props, State> {
         return {
             searchString: '',
             indicateError: false,
-            indicateSearchRunning: false
+            indicateSearchRunning: false,
+            searchHitCount: 0,
         };
     }
 
@@ -46,12 +48,18 @@ class SearchControl extends React.Component<Props, State> {
         searchResults(this.setSearchResults);
     }
 
-    setSearchResults = (searchResults: Track[]) =>{
-        this.setState({
-            searchString: this.state.searchString,
-            indicateError: searchResults.length === 0,
-            indicateSearchRunning: false
-        });
+    setSearchResults = (searchResult: SearchResult) =>{
+        if (searchResult.search_string === this.state.searchString) {
+            const searchHitCount = searchResult.results.length;
+            this.setState({
+                searchString: this.state.searchString,
+                indicateError: this.state.indicateError
+                    || searchResult.has_error
+                    || (this.state.searchHitCount + searchHitCount) === 0 && searchResult.search_completed,
+                indicateSearchRunning: !searchResult.search_completed,
+                searchHitCount: searchHitCount,
+            });
+        }
     };
 
     runSearch = (searchString: string) => {
@@ -61,7 +69,8 @@ class SearchControl extends React.Component<Props, State> {
             this.setState({
                 searchString: searchString,
                 indicateError: false,
-                indicateSearchRunning: true
+                indicateSearchRunning: true,
+                searchHitCount: 0,
             });
             this.subject.next(searchString);
         }
@@ -69,7 +78,7 @@ class SearchControl extends React.Component<Props, State> {
 
     cancelSearch = () => {
         this.setState(SearchControl.getInitialState());
-        // TODO send cancel to backend
+        cancelSearch()
     };
 
     render() {

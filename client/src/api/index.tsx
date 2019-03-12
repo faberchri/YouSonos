@@ -63,6 +63,13 @@ export interface Device {
     max_volume: number;
 }
 
+export interface SearchResult {
+    search_string: string;
+    search_completed: boolean;
+    has_error: boolean;
+    results: Track[];
+}
+
 export type PlayerState =
     'PLAYING' |
     'PAUSED' |
@@ -99,7 +106,7 @@ function playerState(callback: (currentPlayerState: CurrentPlayerState) => void)
     receive('player_state', callback);
 }
 
-function searchResults(callback: (tracks: Track[]) => void) {
+function searchResults(callback: (searchResult: SearchResult) => void) {
     receive('search_results', callback)
 }
 
@@ -130,6 +137,7 @@ type SendEvent =
     'previous_track' |
     'next_track' |
     'search_tracks' |
+    'cancel_search' |
     'play_track' |
     'add_track_to_playlist' |
     'delete_track_from_playlist' |
@@ -155,6 +163,10 @@ function playPreviousTrack() {
 
 function searchTracks(url: string) {
     emit('search_tracks', toYouTubeUrlJson(url))
+}
+
+function cancelSearch() {
+    emit('cancel_search', {})
 }
 
 function playTrack(url: string) {
@@ -215,6 +227,7 @@ export {
     togglePlayPause,
     searchResults,
     searchTracks,
+    cancelSearch,
     playTrack,
     playNextTrack,
     playPreviousTrack,

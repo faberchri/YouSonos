@@ -41,14 +41,15 @@ def player_main(parsed_args: Namespace) -> None:
 	logging= init_logging(parsed_args)
 	main_logger = logging.getLogger(PlayerLoggerName.MAIN.value)
 	main_logger.info('Starting youSonos player ...')
-	from player import SonosEnvironment, Player, Track, Playlist, EventConsumer
+	from player import SonosEnvironment, Player, Track, Playlist, EventConsumer, SearchService
 	sonos_environment = SonosEnvironment.SonosEnvironment()
 	player = Player.Player(sonos_environment, parsed_args.verbose)
 	track_factory = Track.TrackFactory(player)
 	playlist = Playlist.Playlist(track_factory)
 	player.add_terminal_observer(playlist)
 	EventConsumer.PlayerEventsConsumer(sonos_environment, player, track_factory, playlist).start()
-	EventConsumer.SearchEventConsumer(track_factory).start()
+	search_service = SearchService.SearchService(track_factory)
+	EventConsumer.SearchEventConsumer(search_service).start()
 	playlist.read_playlist_from_db()
 	main_logger.info('youSonos player successfully started.')
 

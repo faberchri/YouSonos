@@ -51,6 +51,11 @@ def search_tracks(youtube_url) -> None:
 	publish_on_search_channel(ReceiveEvent.SEARCH_TRACKS, youtube_url)
 
 
+@socketio.on(ReceiveEvent.CANCEL_SEARCH.value)
+def cancel_search(data) -> None:
+	publish_on_search_channel(ReceiveEvent.CANCEL_SEARCH, '{}')
+
+
 @socketio.on(ReceiveEvent.PLAY_TRACK.value)
 def play_track(youtube_url) -> None:
 	publish_on_player_command_channel(ReceiveEvent.PLAY_TRACK, youtube_url)

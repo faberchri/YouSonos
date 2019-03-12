@@ -48,6 +48,7 @@ class ReceiveEvent(Enum):
 	TOGGLE_PLAY_PAUSE = 'toggle_play_pause'
 	SET_VOLUME = 'set_volume'
 	SEARCH_TRACKS = 'search_tracks'
+	CANCEL_SEARCH = 'cancel_search'
 	ADD_TRACK_TO_PLAYLIST = 'add_track_to_playlist'
 	DELETE_TRACK_FROM_PLAYLIST = 'delete_track_from_playlist'
 	CHANGE_PLAYLIST_TRACK_POSITION = 'change_playlist_track_position'
@@ -87,3 +88,4 @@ class PlayerLoggerName(Enum):
 	PLAYLIST_ENTRY = create_logger_name(General.PLAYER_LOGGER_NAME_PREFIX, 'playlist_entry')
 	SONOS_ENVIRONMENT = create_logger_name(General.PLAYER_LOGGER_NAME_PREFIX, 'sonos_environment')
 	TRACK = create_logger_name(General.PLAYER_LOGGER_NAME_PREFIX, 'track')
+	SEARCH_SERVICE = create_logger_name(General.PLAYER_LOGGER_NAME_PREFIX, 'search_service')
