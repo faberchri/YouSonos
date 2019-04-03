@@ -96,6 +96,7 @@ class SearchEventConsumer(EventConsumer):
 
 	def run_event(self, event: ReceiveEvent, sid: str, payload: Any):
 		if event == ReceiveEvent.SEARCH_TRACKS:
-			self._search_service.run_search(payload[URL], sid)
+			self._search_service.run_search(payload['search_term'], payload['batch_index'],
+											payload['search_result_indices'], sid)
 		if event == ReceiveEvent.CANCEL_SEARCH:
 			self._search_service.cancel_search(sid)

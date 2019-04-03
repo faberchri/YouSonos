@@ -123,17 +123,24 @@ class Track(PlayerObserver):
 
 class YouTubeTrack(Track):
 
-	def __init__(self, player: Player, track_status: TrackStatus, pafy_data: BasePafy):
+	def __init__(self, player: Player, track_status: TrackStatus, url: str, pafy: BasePafy):
 		super().__init__(player, track_status)
-		self._pafy_data = pafy_data
-		logger.debug('Resolved youtube video:\n%s', self._pafy_data)
-		self.artist, self.title = self.determine_artist_and_title()
+		self._pafy_initialized = False
+		self._url = url
+		self._pafy: BasePafy = pafy
+		logger.debug('Resolved youtube video: %s', url)
+
+	@property
+	def _pafy_data(self) -> BasePafy:
+		if not self._pafy:
+			self._pafy: BasePafy = pafy.new(self._url)
+		return self._pafy
 
 	def get_title(self) -> str:
-		return self.title
+		return self._determine_artist_and_title()[1]
 
 	def get_artist(self) -> str:
-		return self.artist
+		return self._determine_artist_and_title()[0]
 
 	def get_author(self) -> str:
 		return self._pafy_data.author
@@ -163,40 +170,40 @@ class YouTubeTrack(Track):
 	def _get_best_stream(self) -> Any:
 		return self._pafy_data.getbestaudio()
 
-	def determine_artist_and_title(self) -> (str, str):
+	def _determine_artist_and_title(self) -> (str, str):
 		title: str = self._pafy_data.title
 		if not title:
-			return self.strip_splits(['', self.get_author()])
+			return self._strip_splits(['', self.get_author()])
 
 		# e.g. "Michael Kiwanuka - Cold Little Heart"
 		split = title.split(' - ', 1)
 		if len(split) == 2:
-			return self.strip_splits(split)
+			return self._strip_splits(split)
 
 		# "Solomun @ Théâtre Antique d'Orange for Cercle"
 		split = title.split(' @ ', 1)
 		if len(split) == 2:
-			return self.strip_splits(split)
+			return self._strip_splits(split)
 
 		# "I Got A Name (Jim Croce)"
 		find_paranthesis = r'\((.*?)\)'
 		all_in_paranthesis = re.findall(find_paranthesis, title)
 		if all_in_paranthesis:
 			artist = all_in_paranthesis[-1]
-			return self.strip(artist, title.replace('(' + artist + ')', ''))
+			return self._strip(artist, title.replace('(' + artist + ')', ''))
 
 		# split on first special character
 		non_alphanumeric_or_whitespace = r'[^a-zA-Z0-9_ ]'
 		re_search_result = re.search(non_alphanumeric_or_whitespace, title)
 		if re_search_result:
-			return self.strip(title[:re_search_result.start()], title[re_search_result.end():])
+			return self._strip(title[:re_search_result.start()], title[re_search_result.end():])
 
-		return self.strip('', title)
+		return self._strip('', title)
 
-	def strip_splits(self, split: [str]) -> (str, str):
-		return self.strip(split[0], split[1])
+	def _strip_splits(self, split: [str]) -> (str, str):
+		return self._strip(split[0], split[1])
 
-	def strip(self, artist: str, title: str) -> (str, str):
+	def _strip(self, artist: str, title: str) -> (str, str):
 		return artist.strip(), title.strip()
 
 
@@ -232,31 +239,21 @@ class TrackFactory:
 	def __init__(self, player: Player):
 		self._player = player
 
-	def create_youtube_tracks(self, url: str) -> [YouTubeTrack]:
-		preprocessed_url = self._preprocess_youtube_url(url)
+	def create_youtube_track(self, url: str, track_status=TrackStatus.STOPPED, lazy_load=False) -> YouTubeTrack:
+		pafy_data: BasePafy = None
+		if not lazy_load:
+			pafy_data = pafy.new(url)
+		return YouTubeTrack(self._player, track_status, url, pafy_data)
+
+	def create_youtube_tracks_from_playlist(self, preprocessed_url: str) -> [YouTubeTrack]:
 		try:
-			playlist = pafy.get_playlist(preprocessed_url)
-			if not playlist:
-				raise ValueError('Playlist at URL \'{}\' but does not contain any items. Resolved playlist: {}'.format(preprocessed_url, playlist))
-			return self._create_youtube_tracks_from_playlist(playlist)
+			raw_playlist = pafy.get_playlist(preprocessed_url)
 		except Exception:
-			pass
-		try:
-			pafy_data = pafy.new(preprocessed_url)
-			return [YouTubeTrack(self._player, TrackStatus.STOPPED, pafy_data)]
-		except Exception:
-			pass
-		logger.warning('Neither a YouTube playlist nor a single YouTube video was found at \'%s\'', preprocessed_url)
-		return []
-
-	def _preprocess_youtube_url(self, url: str) -> str:
-		return url.replace('/m.youtube.com', '/youtube.com')
-
-	def _create_youtube_tracks_from_playlist(self, raw_playlist) -> [YouTubeTrack]:
-		return [YouTubeTrack(self._player, TrackStatus.STOPPED, item['pafy']) for item in raw_playlist['items']]
-
-	def create_youtube_track(self, url: str, track_status=TrackStatus.STOPPED) -> YouTubeTrack:
-		return YouTubeTrack(self._player, track_status, pafy.new(url))
+			return []
+		if not raw_playlist['items']:
+			logger.warning('Playlist at URL \'{}\' exists but does not contain any items. Resolved playlist: {}'
+							 .format(preprocessed_url, raw_playlist))
+		return [YouTubeTrack(self._player, TrackStatus.STOPPED, item['pafy'].videoid, item['pafy']) for item in raw_playlist['items']]
 
 	def _create_youtube_track_from_dict(self, track_dict) -> YouTubeTrack:
 		return self.create_youtube_track(track_dict[URL], track_status=TrackStatus(track_dict[STATUS]))

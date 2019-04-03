@@ -8,7 +8,11 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 
 import Clear from '@material-ui/icons/Clear';
 
+import {Subject, timer} from "rxjs";
+import {debounce} from "rxjs/operators";
+
 interface State {
+    searchString: string
 }
 
 const styles = (theme: Theme) => createStyles({
@@ -24,21 +28,42 @@ const styles = (theme: Theme) => createStyles({
 });
 
 interface Props extends WithStyles<typeof styles> {
-    searchString: string,
     onValueChange: (searchString: string) => void,
-    onFieldReset: () => void,
     indicateError: boolean,
     indicateSearchRunning: boolean
 }
 
 class SearchInputField extends React.Component<Props, State> {
 
+    subject = new Subject<string>();
+
     constructor(props: Props) {
         super(props);
+        this.state = {
+            searchString: ''
+        };
+
+        this.subject
+            .pipe(debounce(() => timer(500)))
+            .subscribe((searchString) => {
+                this.props.onValueChange(searchString)
+            });
     }
 
     onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.props.onValueChange(event.target.value);
+        const searchString = event.target.value;
+        this.onFieldSet(searchString);
+    };
+
+    onReset = () => {
+        this.onFieldSet('')
+    };
+
+    onFieldSet = (searchString: string) => {
+        this.setState({
+            searchString: searchString,
+        });
+        this.subject.next(searchString);
     };
 
     render() {
@@ -52,16 +77,16 @@ class SearchInputField extends React.Component<Props, State> {
                     <CircularProgress size={46} className={classes.circularProgress} />
                     <IconButton
                         aria-label="clear input"
-                        onClick={this.props.onFieldReset}>
+                        onClick={this.onReset}>
                             <Clear/>
                     </IconButton>
                 </div>
         } else {
-            if (this.props.searchString.length > 0) {
+            if (this.state.searchString.length > 0) {
                 textFieldAction =
                     <IconButton
                         aria-label="clear input"
-                        onClick={this.props.onFieldReset}>
+                        onClick={this.onReset}>
                         <Clear/>
                     </IconButton>
             }
@@ -81,12 +106,12 @@ class SearchInputField extends React.Component<Props, State> {
         return (
                 <TextField
                     error={this.props.indicateError}
-                    label="YouTube-URL"
+                    label="YouTube-URL, track id, playlist id, or keywords"
                     className={classes.textField}
                     margin="dense"
                     variant="outlined"
                     onChange={this.onChange}
-                    value={this.props.searchString}
+                    value={this.state.searchString}
                     InputProps={endAdornment}
                 />
         );

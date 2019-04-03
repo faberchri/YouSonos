@@ -1,12 +1,12 @@
 import React from "react";
-import {currentTrack, NULL_TRACK, playlistChanged, PlaylistItem, SearchResult, searchResults, Track} from "./api";
+import {currentTrack, NULL_TRACK, playlistChanged, PlaylistItem, SearchResultTrack, Track} from "./api";
 import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/styles";
 import List from '@material-ui/core/List';
 import SearchResultEntry from "./SearchResultEntry";
 
 
 interface State {
-    searchResultTracks: Track[];
+
     playlistTrackUrls: ReadonlySet<string>;
     currentTrack: Track;
 }
@@ -18,6 +18,7 @@ const styles = (theme: Theme) => createStyles({
 });
 
 interface Props extends WithStyles<typeof styles> {
+    sortedSearchResultTracks: ReadonlyArray<SearchResultTrack>;
 }
 
 class SearchResultList extends React.Component<Props, State> {
@@ -26,32 +27,20 @@ class SearchResultList extends React.Component<Props, State> {
         super(props);
         this.state = {
             currentTrack: NULL_TRACK,
-            searchResultTracks: [],
             playlistTrackUrls: new Set()
         };
-        this.setSearchResults = this.setSearchResults.bind(this);
         this.setPlaylistTrackUrls = this.setPlaylistTrackUrls.bind(this);
         this.setCurrentTrack = this.setCurrentTrack.bind(this);
     }
 
     componentDidMount() {
-        searchResults(this.setSearchResults);
         playlistChanged(this.setPlaylistTrackUrls);
         currentTrack(this.setCurrentTrack)
-    }
-
-    setSearchResults(searchResult: SearchResult) {
-        this.setState({
-            searchResultTracks: searchResult.results,
-            playlistTrackUrls: this.state.playlistTrackUrls,
-            currentTrack: this.state.currentTrack,
-        });
     }
 
     setPlaylistTrackUrls(items: PlaylistItem[]) {
         const playlistTrackUrls = new Set(items.map(item => item.track.url));
         this.setState({
-            searchResultTracks: this.state.searchResultTracks,
             playlistTrackUrls: playlistTrackUrls,
             currentTrack: this.state.currentTrack,
         });
@@ -59,21 +48,18 @@ class SearchResultList extends React.Component<Props, State> {
 
     setCurrentTrack(currentTrack: Track) {
         this.setState({
-            searchResultTracks: this.state.searchResultTracks,
             playlistTrackUrls: this.state.playlistTrackUrls,
             currentTrack: currentTrack,
         });
     }
 
     render() {
-
         const {classes} = this.props;
-
         return (
             <List dense className={classes.list}>
-                {this.state.searchResultTracks.map((searchResultTrack, index) => <SearchResultEntry
-                    key={index}
-                    searchResultTrack={searchResultTrack}
+                {this.props.sortedSearchResultTracks.map(searchResultTrack => <SearchResultEntry
+                    key={searchResultTrack.index}
+                    searchResultTrack={searchResultTrack.track}
                     currentTrack={this.state.currentTrack}
                     playlistTrackUrls={this.state.playlistTrackUrls}/>)}
             </List>

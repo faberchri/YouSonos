@@ -12,6 +12,7 @@ youtube-dl = "*"
 flask-socketio = "*"
 eventlet = "*"
 redis = "*"
+google-api-python-client = "*"
 
 [requires]
 python_version = "3.7"

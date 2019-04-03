@@ -63,11 +63,18 @@ export interface Device {
     max_volume: number;
 }
 
+export interface SearchResultTrack {
+    index: number;
+    track: Track;
+}
+
 export interface SearchResult {
     search_string: string;
+    batch_index: number;
     search_completed: boolean;
+    batch_completed: boolean;
     has_error: boolean;
-    results: Track[];
+    results: SearchResultTrack[];
 }
 
 export type PlayerState =
@@ -161,8 +168,9 @@ function playPreviousTrack() {
     emit('previous_track', {})
 }
 
-function searchTracks(url: string) {
-    emit('search_tracks', toYouTubeUrlJson(url))
+function searchTracks(searchTerm: string, batchIndex: number, searchResultIndices: number[]) {
+    emit('search_tracks', {search_term: searchTerm, batch_index: batchIndex,
+        search_result_indices: searchResultIndices})
 }
 
 function cancelSearch() {

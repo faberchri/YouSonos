@@ -27,13 +27,16 @@ def init_logging(parsed_args: Namespace):
 
 
 def parse_args() -> Namespace:
-	parser = argparse.ArgumentParser(description='Play YouTube tracks on Sonos loud speakers.')
+	parser = argparse.ArgumentParser(prog='YouSonos', description='Play YouTube tracks on Sonos loud speakers.')
 	parser.add_argument('--verbose', '-v', action='count',  default=0, help='Change the level of verbosity. '
 																			'Info: -v, Debug: -vv, Warn: default')
 	parser.add_argument('--host', '-i', action='store', help='The hostname or IP address for the server to listen on. '
 													   'Is set to flask-SocketIO default value if not specified.')
 	parser.add_argument('--port', '-p', action='store', help='The port number for the server to listen on. '
 													   'Is set to flask-SocketIO default value if not specified.')
+	parser.add_argument('--youtube-api-key', '-k', action='store', help='The YouTube API key. If not specified or invalid '
+																	  'the key word search is disabled and only YouTube '
+																	  'URLs and YouTube video IDs are valid search input.')
 	return parser.parse_args()
 
 
@@ -48,7 +51,7 @@ def player_main(parsed_args: Namespace) -> None:
 	playlist = Playlist.Playlist(track_factory)
 	player.add_terminal_observer(playlist)
 	EventConsumer.PlayerEventsConsumer(sonos_environment, player, track_factory, playlist).start()
-	search_service = SearchService.SearchService(track_factory)
+	search_service = SearchService.SearchService(track_factory, parsed_args.youtube_api_key)
 	EventConsumer.SearchEventConsumer(search_service).start()
 	playlist.read_playlist_from_db()
 	main_logger.info('youSonos player successfully started.')
