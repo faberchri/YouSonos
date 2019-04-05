@@ -24,7 +24,8 @@ const styles = (theme: Theme) => createStyles({
     root: {
         display: 'flex',
         flexFlow: 'column',
-    }
+        height: '100%',
+    },
 });
 
 interface Props extends WithStyles<typeof styles> {

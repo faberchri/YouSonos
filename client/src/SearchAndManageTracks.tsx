@@ -18,7 +18,7 @@ var SwipeableViews = require('react-swipeable-views').default;
 
 interface State {
     index: number,
-    playlistSize: number
+    playlistSize: number,
 }
 
 const styles = (theme: Theme) => createStyles({
@@ -37,9 +37,9 @@ const styles = (theme: Theme) => createStyles({
     },
     slideContainer: {
         display: 'flex',
-        flexFlow: 'column',
-        height: '100%'
-    }
+        height: '100%',
+        overflow: 'hidden',
+    },
 });
 
 interface Props extends WithStyles<typeof styles> {}
@@ -51,7 +51,10 @@ class SearchAndManageTracks extends React.Component<Props, State> {
         super(props);
         this.setPlaylistSize = this.setPlaylistSize.bind(this);
 
-        this.state = { index: 0, playlistSize: 0 };
+        this.state = {
+            index: 0,
+            playlistSize: 0,
+        };
     }
 
     handleChange = (event: any, index: number) => {
@@ -63,7 +66,10 @@ class SearchAndManageTracks extends React.Component<Props, State> {
     }
 
     setPlaylistSize(items: PlaylistItem[]) {
-        this.setState({index: this.state.index, playlistSize: items.length})
+        this.setState({
+            index: this.state.index,
+            playlistSize: items.length,
+        })
     }
 
     render() {
@@ -91,7 +97,8 @@ class SearchAndManageTracks extends React.Component<Props, State> {
                     disabled = {true}
                     index={this.state.index}
                     className={classes.slideContainer}
-                    slideStyle={{display: 'flex', flexFlow: 'column'}}
+                    containerStyle={{width: '100%'}}
+                    slideStyle={{display: 'flex', flexFlow: 'column', height: 'auto'}}
                 >
                     <SearchControl />
                     <Playlist />
