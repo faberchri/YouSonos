@@ -1,15 +1,14 @@
 import React from "react";
 import {Subject, timer} from "rxjs";
 import {debounce} from "rxjs/operators";
-import {Device, setVolume, Track, volumeChanged} from "./api";
+import {Device, setVolume, volumeChanged} from "./api";
 import Slider from "@material-ui/lab/Slider/Slider";
-import Typography from "@material-ui/core/Typography";
 import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/styles";
 import Grid from '@material-ui/core/Grid';
 import VolumeDownRounded from '@material-ui/icons/VolumeDownRounded';
 import VolumeUpRounded from '@material-ui/icons/VolumeUpRounded';
 import IconButton from '@material-ui/core/IconButton';
-
+import classNames from 'classnames';
 
 interface State {
     currentVolume: number;
@@ -26,11 +25,6 @@ const styles = (theme: Theme) => createStyles({
         paddingLeft: '7px',
         paddingRight: '7px',
         overflowX: 'hidden'
-    },
-    label: {
-        marginLeft: '5px'
-    },
-    paper: {
     },
     verticalCentered: {
         display: 'flex',
@@ -95,15 +89,12 @@ class VolumeControl extends React.Component<Props, State> {
 
         return (
             <Grid container className={classes.root} >
-                <Grid item xs={2} className={classes.verticalCentered}>
-                    <Typography className={classes.label}>{this.props.device.device_name}</Typography>
-                </Grid>
                 <Grid item xs={2}>
                     <IconButton onClick={this.reduceVolume} color="primary">
                         <VolumeDownRounded />
                     </IconButton>
                 </Grid>
-                <Grid item xs={6} className={classes.verticalCentered + ' ' + classes.sliderContainer}>
+                <Grid item xs={8} className={classNames(classes.verticalCentered, classes.sliderContainer)}>
                         {<Slider
                             classes={{ container: classes.slider }}
                             max={this.props.device.max_volume}

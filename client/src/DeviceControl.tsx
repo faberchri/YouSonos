@@ -1,11 +1,12 @@
 import React from "react";
-import {sonosSetup, Device} from "./api";
+import {Device, sonosSetup} from "./api";
 import VolumeControl from "./VolumeControl";
 
 import {Theme, withStyles} from "@material-ui/core/styles";
-import { WithStyles, createStyles } from '@material-ui/core';
+import {createStyles, WithStyles} from '@material-ui/core';
 import Grid from "@material-ui/core/Grid/Grid";
 import Paper from "@material-ui/core/Paper";
+import Typography from "@material-ui/core/Typography";
 
 
 interface State {
@@ -18,11 +19,19 @@ const styles = (theme: Theme) => createStyles({
         paddingTop: '5px',
         paddingBottom: '5px',
         minHeight: '100px',
-        overflow: 'auto',
+        overflowY: 'auto',
+        overflowX: 'hidden',
     },
-
-    gridItem: {
-    }
+    label: {
+        marginLeft: '5px',
+        overflowX: 'auto',
+        textAlign: 'center',
+    },
+    verticalCentered: {
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+    },
 });
 
 interface Props extends WithStyles<typeof styles> {}
@@ -51,8 +60,15 @@ class DeviceControl extends React.Component<Props, State> {
             <Paper className={classes.root}>
                 <Grid container>
                     {this.state.devices.map((item, index) => (
-                        <Grid item xs={12} className={classes.gridItem} key={item.device_name}>
-                            <VolumeControl  device={ item }/>
+                        <Grid item xs={12} key={item.device_name}>
+                            <Grid container>
+                                <Grid item xs={3} className={classes.verticalCentered}>
+                                    <Typography className={classes.label}>{item.device_name}</Typography>
+                                </Grid>
+                                <Grid item xs={9} className={classes.verticalCentered}>
+                                    <VolumeControl  device={ item }/>
+                                </Grid>
+                            </Grid>
                         </Grid>
                     ))}
                 </Grid>
