@@ -4,6 +4,9 @@ import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/sty
 import List from '@material-ui/core/List';
 import SearchResultEntry from "./SearchResultEntry";
 
+// Types from 'npm i @types/react-infinite-scroller' are not compatible
+var InfiniteScroll = require('react-infinite-scroller');
+
 
 interface State {
 
@@ -18,7 +21,9 @@ const styles = (theme: Theme) => createStyles({
 });
 
 interface Props extends WithStyles<typeof styles> {
-    sortedSearchResultTracks: ReadonlyArray<SearchResultTrack>;
+    sortedSearchResultTracks: ReadonlyArray<SearchResultTrack>,
+    loadMore: () => void,
+    hasMore: boolean,
 }
 
 class SearchResultList extends React.Component<Props, State> {
@@ -56,12 +61,18 @@ class SearchResultList extends React.Component<Props, State> {
     render() {
         const {classes} = this.props;
         return (
-            <List dense className={classes.list}>
-                {this.props.sortedSearchResultTracks.map(searchResultTrack => <SearchResultEntry
-                    key={searchResultTrack.index}
-                    searchResultTrack={searchResultTrack.track}
-                    currentTrack={this.state.currentTrack}
-                    playlistTrackUrls={this.state.playlistTrackUrls}/>)}
+            <List dense className={classes.list} >
+                <InfiniteScroll
+                    loadMore={this.props.loadMore}
+                    hasMore={this.props.hasMore}
+                    useWindow={false}
+                    initialLoad={true}>
+                    {this.props.sortedSearchResultTracks.map(searchResultTrack => <SearchResultEntry
+                        key={searchResultTrack.index}
+                        searchResultTrack={searchResultTrack.track}
+                        currentTrack={this.state.currentTrack}
+                        playlistTrackUrls={this.state.playlistTrackUrls}/>)}
+                </InfiniteScroll>
             </List>
         );
     }

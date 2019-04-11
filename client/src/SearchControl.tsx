@@ -90,16 +90,30 @@ class SearchControl extends React.Component<Props, State> {
         if (searchString === '') {
             cancelSearch();
         } else {
-            const searchState = this.getSearchState(searchString);
-            if (!searchState.searchRunning && !searchState.searchCompleted) {
-                this.runSearch(searchString)
-            }
+            this.tryRunSearch(searchString);
         }
         this.setState({
             searchString: searchString,
             searchStates: this.state.searchStates,
             searchResults: this.state.searchResults,
         });
+    };
+
+    loadMore = () => {
+        if (this.state.searchString !== '') {
+            this.tryRunSearch(this.state.searchString);
+        }
+    };
+
+    hasMore = () => {
+        return !this.getSearchState(this.state.searchString).searchCompleted;
+    };
+
+    tryRunSearch = (searchString: string) => {
+        const searchState = this.getSearchState(searchString);
+        if (!searchState.searchRunning && !searchState.searchCompleted) {
+            this.runSearch(searchString)
+        }
     };
 
     runSearch = (searchString: string) => {
@@ -169,7 +183,9 @@ class SearchControl extends React.Component<Props, State> {
                     indicateError={this.getCurrentSearchState().hasErrors}
                     indicateSearchRunning={this.getCurrentSearchState().searchRunning} />
                 <SearchResultList
-                    sortedSearchResultTracks={this.getCurrentSearchResultTracksSorted()} />
+                    sortedSearchResultTracks={this.getCurrentSearchResultTracksSorted()}
+                    loadMore={this.loadMore}
+                    hasMore={this.hasMore()}/>
             </div>
         );
     }

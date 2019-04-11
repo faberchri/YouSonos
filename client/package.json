@@ -20,6 +20,7 @@
     "moment-duration-format": "^2.2.2",
     "react": "^16.6.1",
     "react-dom": "^16.6.1",
+    "react-infinite-scroller": "^1.2.4",
     "react-scripts": "2.1.1",
     "react-sortable-hoc": "^0.8.4",
     "react-swipeable-views": "^0.13.0",
