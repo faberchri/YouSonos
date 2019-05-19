@@ -1,0 +1,15 @@
+version: '3'
+services:
+    yousonos:
+        build: .
+        depends_on:
+         - redis
+        network_mode: host
+        restart: always
+        command: ["--host", "0.0.0.0", "--port", "80", "--youtube-api-key", "<specify-your-YouTube-API-key-here>"]
+    redis:
+        image: redis:5-alpine3.9
+        network_mode: host
+        command: ["redis-server", "--appendonly", "yes", "--appendfilename", "yousonos_redis_db.aof"]
+        volumes:
+         - ./data:/data

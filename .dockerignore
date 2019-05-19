@@ -1,0 +1,6 @@
+.git/
+.gitignore
+client/node_modules
+client/build
+**/__pycache__
+
