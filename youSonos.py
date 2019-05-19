@@ -2,8 +2,12 @@
 
 import argparse
 import multiprocessing as mp
+import time
 from argparse import Namespace
 from typing import NoReturn
+
+import redis
+from redis.exceptions import ConnectionError
 
 from Constants import ServerLoggerName, PlayerLoggerName
 
@@ -40,10 +44,29 @@ def parse_args() -> Namespace:
 	return parser.parse_args()
 
 
+def wait_for_redis(logger) -> None:
+	MAX_REDIS_WAIT_TIME = 30
+	i = 0
+	db = redis.Redis()
+	while True:
+		try:
+			if db.ping():
+				logger.info('Connection to redis server established.')
+				break
+		except ConnectionError:
+			if i > MAX_REDIS_WAIT_TIME:
+				logger.error('Connecting to redis server failed ({}/{}).'.format(i, MAX_REDIS_WAIT_TIME))
+				raise
+		logger.warning('Waiting for redis server ... ({}/{})'.format(i, MAX_REDIS_WAIT_TIME))
+		time.sleep(1)
+		i = i + 1
+
+
 def player_main(parsed_args: Namespace) -> None:
 	logging= init_logging(parsed_args)
 	main_logger = logging.getLogger(PlayerLoggerName.MAIN.value)
 	main_logger.info('Starting youSonos player ...')
+	wait_for_redis(main_logger)
 	from player import SonosEnvironment, Player, Track, Playlist, EventConsumer, SearchService
 	sonos_environment = SonosEnvironment.SonosEnvironment()
 	player = Player.Player(sonos_environment, parsed_args.verbose)
@@ -63,6 +86,7 @@ def server_main(parsed_args: Namespace) -> NoReturn:
 	main_logger.info('Starting youSonos server ...')
 	import eventlet
 	eventlet.monkey_patch()
+	wait_for_redis(main_logger)
 	from server import create_app
 	from server import socketio
 	app = create_app()
