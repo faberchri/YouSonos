@@ -30,10 +30,6 @@ interface Props extends WithStyles<typeof styles> {
 
 class PlayPauseButton extends React.Component<Props, {}> {
 
-    constructor(props: Props) {
-        super(props);
-    }
-
     render() {
         const {classes} = this.props;
 

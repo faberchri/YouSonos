@@ -1,9 +1,8 @@
 import React from "react";
-import {changePlaylistTrackPosition, playlistChanged, Track, PlaylistItem} from "./api";
+import {changePlaylistTrackPosition, playlistChanged, PlaylistItem} from "./api";
 import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/styles";
 import List from '@material-ui/core/List';
-import DragHandleRounded from '@material-ui/icons/DragHandleRounded';
-import {arrayMove, SortableContainer, SortableElement, SortableHandle, SortEnd, SortEvent} from 'react-sortable-hoc';
+import {arrayMove, SortableContainer, SortableElement, SortEnd, SortEvent} from 'react-sortable-hoc';
 import PlaylistEntry from "./PlaylistEntry";
 
 interface State {
@@ -17,8 +16,6 @@ const styles = (theme: Theme) => createStyles({
 });
 
 interface Props extends WithStyles<typeof styles> {}
-
-const DragHandleInstance = SortableHandle(() => <DragHandleRounded/>);
 
 const SortableItem = SortableElement(({playlistItem, playlistIndex}: {playlistItem: PlaylistItem, playlistIndex: number}) =>{
     return(

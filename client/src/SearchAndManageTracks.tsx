@@ -84,7 +84,7 @@ class SearchAndManageTracks extends React.Component<Props, State> {
                         onChange={this.handleChange}
                         indicatorColor="secondary"
                         textColor="secondary"
-                        fullWidth
+                        variant={"fullWidth"}
                     >
 
                         <Tab icon={<Search/>} />

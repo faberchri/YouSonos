@@ -6,12 +6,12 @@ let socket: any;
 const albumIcon: string = require('../static/album_grey_192x192.png');
 
 function initSocket() {
-    let port = location.port;
+    let port = window.location.port;
     if (process.env.NODE_ENV !== 'production' && port === '3000') {
         // assume server is running on default port 5000 if we want to access the react dev server
         port = '5000';
     }
-    const apiUrl = location.protocol + '//' + location.hostname + (port ? ':' + port : '');
+    const apiUrl = window.location.protocol + '//' + window.location.hostname + (port ? ':' + port : '');
     socket = openSocket(apiUrl);
 }
 
@@ -204,10 +204,6 @@ function seekTo(timeInMilliseconds: number) {
 
 function toYouTubeUrlJson(url: string) {
     return {url: url}
-}
-
-function toYouTubeUrlWithPlaylistPositionJson(url: string, position: number) {
-    return {url: url, playlist_position: position}
 }
 
 function toPlaylistEntryIdJson(playlistEntryId: string) {

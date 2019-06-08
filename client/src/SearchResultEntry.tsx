@@ -22,13 +22,7 @@ interface Props extends WithStyles<typeof styles> {
 
 class SearchResultEntry extends React.Component<Props, State> {
 
-    constructor(props: Props) {
-        super(props);
-    }
-
     render() {
-
-        const {classes} = this.props;
 
         const searchResultTrack = this.props.searchResultTrack;
         const activeTrack = this.props.currentTrack;

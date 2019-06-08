@@ -29,7 +29,8 @@ const styles = (theme: Theme) => createStyles({
     sliderContainer: {
         paddingLeft: '7px',
         paddingRight: '7px',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        overflowY: 'hidden' // only for Safari
     },
     label: {
     },
@@ -44,9 +45,11 @@ const styles = (theme: Theme) => createStyles({
         marginTop: '-20px'
     },
     currentTime: {
+        textAlign: 'left',
         paddingLeft: '10%'
     },
     totalTime: {
+        textAlign: 'right',
         paddingRight: '10%'
     },
     positionChangeButton: {
@@ -139,14 +142,14 @@ class TrackProgressControl extends React.Component<Props, State> {
 
         return (
 
-            <Grid container className={classes.root} >
+            <Grid container className={classes.root}>
 
                 <Grid item xs={1}>
                     <IconButton onClick={this.tenSecondsReplay} color="primary" className={classes.positionChangeButton} disabled={disabled}>
                         <Replay10Icon fontSize="small"/>
                     </IconButton>
                 </Grid>
-                <Grid item xs={10} className={classes.verticalCentered + ' ' + classes.sliderContainer}>
+                <Grid item xs={10} className={classNames(classes.verticalCentered, classes.sliderContainer)}>
                     {<Slider
                         classes={{ container: classes.slider }}
                         max={this.props.track.duration}
@@ -162,7 +165,7 @@ class TrackProgressControl extends React.Component<Props, State> {
                         <Forward10Icon fontSize="small"/>
                     </IconButton>
                 </Grid>
-                <Grid item xs={6} className={classNames(classes.time, classes.currentTime)}>
+                <Grid item xs={6} className={classNames(classes.time, classes.currentTime)} >
                     <Typography className={classes.label} variant="caption" align={"left"}>{this.getPlayerTimeString()}</Typography>
                 </Grid>
                 <Grid item xs={6} className={classNames(classes.time, classes.totalTime)}>

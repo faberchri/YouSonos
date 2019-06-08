@@ -63,7 +63,7 @@ class DeviceControl extends React.Component<Props, State> {
                         <Grid item xs={12} key={item.device_name}>
                             <Grid container>
                                 <Grid item xs={3} className={classes.verticalCentered}>
-                                    <Typography className={classes.label}>{item.device_name}</Typography>
+                                    <Typography variant={"body2"} className={classes.label}>{item.device_name}</Typography>
                                 </Grid>
                                 <Grid item xs={9} className={classes.verticalCentered}>
                                     <VolumeControl  device={ item }/>

@@ -54,7 +54,7 @@ class PlaylistEntry extends React.Component<Props, {}> {
         let showAsPlaying = false;
         if (this.props.playlistItem.status === 'CURRENT') {
             const trackStatus = this.props.playlistItem.track.track_status;
-            if (trackStatus == 'PLAYING') {
+            if (trackStatus === 'PLAYING') {
                 showAsPlaying = true;
             }
         }

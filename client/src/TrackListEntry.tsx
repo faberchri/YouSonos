@@ -1,6 +1,6 @@
 import React from "react";
 import {formatDuration, Track} from "./api";
-import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core";
+import {createStyles, ListItemAvatar, Theme, WithStyles, withStyles} from "@material-ui/core";
 import ListItem from "@material-ui/core/ListItem/ListItem";
 import ListItemText from "@material-ui/core/ListItemText/ListItemText";
 import classNames from 'classnames';
@@ -36,10 +36,6 @@ interface Props extends WithStyles<typeof styles> {
 
 class TrackListEntry extends React.Component<Props, {}> {
 
-    constructor(props: Props) {
-        super(props);
-    }
-
     render() {
         const {classes} = this.props;
 
@@ -49,9 +45,11 @@ class TrackListEntry extends React.Component<Props, {}> {
         }
         return (
             <ListItem key={this.props.track.url} role={undefined} divider={true} className={listItemClasses} dense>
-                <PlayPauseButton track={this.props.track}
-                                 onClick={this.props.playPauseCallback}
-                                 showAsPlaying={this.props.showAsPlaying}/>
+                <ListItemAvatar>
+                    <PlayPauseButton track={this.props.track}
+                                     onClick={this.props.playPauseCallback}
+                                     showAsPlaying={this.props.showAsPlaying}/>
+                </ListItemAvatar>
                 <ListItemText primary={this.props.track.title} secondary={this.props.track.artist}/>
                 <ListItemText className={classes.duration} primary={formatDuration(this.props.track.duration)}/>
                 {this.props.rightIcon}
