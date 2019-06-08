@@ -1,15 +1,10 @@
 from __future__ import annotations
 
-from concurrent.futures.thread import ThreadPoolExecutor
-
-import logging
 import uuid
-from enum import Enum, unique
-from typing import Callable
+from concurrent.futures.thread import ThreadPoolExecutor
 from uuid import UUID
 
-from Constants import PlayerLoggerName
-from player.Track import Track, TrackFactory
+from . import *
 
 ID = 'playlist_entry_id'
 TRACK = 'track'
@@ -49,20 +44,15 @@ class PlaylistEntry:
 	def next_entry(self) -> PlaylistEntry:
 		return self._next_entry
 
-	@property
-	def playlist_entry_status(self) -> PlaylistEntryStatus:
-		return self._playlist_entry_status
-
-	@playlist_entry_status.setter
-	def playlist_entry_status(self, new_status: PlaylistEntryStatus) -> None:
-		self._playlist_entry_status = new_status
+	def is_current(self):
+		return self._playlist_entry_status == PlaylistEntryStatus.CURRENT
 
 	def play(self) -> None:
-		self.set_to_current()
+		self._set_to_current()
 		self.track.play()
 
 	def toggle_play_pause(self) -> None:
-		self.set_to_current()
+		self._set_to_current()
 		self.track.toggle_play_pause()
 
 	def play_previous(self) -> None:
@@ -80,8 +70,8 @@ class PlaylistEntry:
 	def stop(self) -> None:
 		self.track.stop()
 
-	def set_to_current(self) -> None:
-		self.playlist_entry_status = PlaylistEntryStatus.CURRENT
+	def _set_to_current(self) -> None:
+		self._playlist_entry_status = PlaylistEntryStatus.CURRENT
 		self.update_playlist_entry_stati()
 
 	def update_playlist_entry_stati(self) -> None:
@@ -110,12 +100,12 @@ class PlaylistEntry:
 
 	def __str__(self) -> str:
 		return 'PLaylist entry for track: {} (status: {}, id: {})'\
-			.format(self.track, self.playlist_entry_status, self.playlist_entry_id)
+			.format(self.track, self._playlist_entry_status, self.playlist_entry_id)
 
 	def get_property_dict(self) -> {}:
 		return {ID: str(self.playlist_entry_id),
 				TRACK: self.track.get_property_dict(),
-				STATUS: self.playlist_entry_status.value}
+				STATUS: self._playlist_entry_status.value}
 
 
 class PlaylistEntryFactory:

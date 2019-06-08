@@ -1,32 +1,17 @@
 from __future__ import annotations
 
-import logging
 import re
-from abc import abstractmethod
-from enum import Enum, unique
-from typing import Any
 
 import pafy
 from pafy.backend_shared import BasePafy
 
-from Constants import Source, DbKey, SendEvent, PlayerLoggerName
-from player.Player import PlayerObserver, PlayerStatus, Player
-
-from . import save_and_emit
+from . import *
 
 URL = 'url'
 TYPE = 'track_type'
 STATUS = 'track_status'
 COVER_URL= 'cover_url'
 DURATION= 'duration'
-
-VLC_STREAM_QUALITY = '192'
-
-VLC_STREAM_NAME_AAC = 'vlc.mp4'
-VLC_STREAM_NAME_MP3 = 'vlc.mp3'
-
-VLC_TRANSCODE_CMD_AAC = ':sout=#transcode{aenc=ffmpeg{strict=-2},acodec=mp4a,ab=' + VLC_STREAM_QUALITY + '}:standard{mux=raw,dst=/' + VLC_STREAM_NAME_AAC + ',access=http,sap}'
-VLC_TRANSCODE_CMD_MP3 = ':sout=#transcode{acodec=mp3,ab=' + VLC_STREAM_QUALITY + '}:standard{mux=raw,dst=/' + VLC_STREAM_NAME_MP3 + ',access=http,sap}'
 
 logger = logging.getLogger(PlayerLoggerName.TRACK.value)
 
@@ -45,8 +30,9 @@ class TrackStatus(Enum):
 
 class Track(PlayerObserver):
 
-	def __init__(self, player: Player, track_status: TrackStatus):
+	def __init__(self, args: Namespace, player: Player, track_status: TrackStatus):
 		super().__init__()
+		self._args = args
 		self._player = player
 		self._track_status = track_status
 
@@ -75,8 +61,11 @@ class Track(PlayerObserver):
 	@abstractmethod
 	def create_vlc_media(self, vlc_instance) -> Any: raise NotImplementedError
 
-	@abstractmethod
-	def get_vlc_stream_name(self) -> str: raise NotImplementedError
+	def get_out_stream_url(self, reference_ip: str, reference_port=General.VLC_OUT_STREAM_DEFAULT_PORT) -> str:
+		if self._args.out_stream_url:
+			return self._args.out_stream_url
+		own_ip = get_own_ip(reference_ip, reference_port)
+		return 'http://{}:{}/{}'.format(own_ip, reference_port, General.OUT_STREAM_NAME)
 
 	@abstractmethod
 	def get_duration(self) -> int: raise NotImplementedError
@@ -123,8 +112,8 @@ class Track(PlayerObserver):
 
 class YouTubeTrack(Track):
 
-	def __init__(self, player: Player, track_status: TrackStatus, url: str, pafy: BasePafy):
-		super().__init__(player, track_status)
+	def __init__(self, args: Namespace, player: Player, track_status: TrackStatus, url: str, pafy: BasePafy):
+		super().__init__(args, player, track_status)
 		self._pafy_initialized = False
 		self._url = url
 		self._pafy: BasePafy = pafy
@@ -157,12 +146,8 @@ class YouTubeTrack(Track):
 	def create_vlc_media(self, vlc_instance):
 		input_stream = self._get_best_stream()
 		logger.debug('Best audio stream of %s: %s (URL: %s)', self, input_stream, input_stream.url)
-		cmd = VLC_TRANSCODE_CMD_MP3
-		logger.debug('Create new VLC media from %s with command: %s', input_stream.url, cmd)
-		return vlc_instance.media_new(input_stream.url, cmd)
-
-	def get_vlc_stream_name(self) -> str:
-		return VLC_STREAM_NAME_MP3
+		logger.debug('Create new VLC media from %s with command: %s', input_stream.url, self._args.vlc_command)
+		return vlc_instance.media_new(input_stream.url, self._args.vlc_command)
 
 	def get_duration(self) -> int:
 		return self._pafy_data.length * 1000
@@ -228,22 +213,20 @@ class NullTrack(Track):
 
 	def create_vlc_media(self, vlc_instance): raise NotImplementedError
 
-	def get_vlc_stream_name(self) -> str:
-		return ''
-
 	def get_duration(self) -> int:
 		return 0
 
 
 class TrackFactory:
-	def __init__(self, player: Player):
+	def __init__(self, args: Namespace, player: Player):
+		self._args = args
 		self._player = player
 
 	def create_youtube_track(self, url: str, track_status=TrackStatus.STOPPED, lazy_load=False) -> YouTubeTrack:
 		pafy_data: BasePafy = None
 		if not lazy_load:
 			pafy_data = pafy.new(url)
-		return YouTubeTrack(self._player, track_status, url, pafy_data)
+		return YouTubeTrack(self._args, self._player, track_status, url, pafy_data)
 
 	def create_youtube_tracks_from_playlist(self, preprocessed_url: str) -> [YouTubeTrack]:
 		try:
@@ -253,7 +236,7 @@ class TrackFactory:
 		if not raw_playlist['items']:
 			logger.warning('Playlist at URL \'{}\' exists but does not contain any items. Resolved playlist: {}'
 							 .format(preprocessed_url, raw_playlist))
-		return [YouTubeTrack(self._player, TrackStatus.STOPPED, item['pafy'].videoid, item['pafy']) for item in raw_playlist['items']]
+		return [YouTubeTrack(self._args, self._player, TrackStatus.STOPPED, item['pafy'].videoid, item['pafy']) for item in raw_playlist['items']]
 
 	def _create_youtube_track_from_dict(self, track_dict) -> YouTubeTrack:
 		return self.create_youtube_track(track_dict[URL], track_status=TrackStatus(track_dict[STATUS]))

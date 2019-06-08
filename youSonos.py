@@ -9,7 +9,7 @@ from typing import NoReturn
 import redis
 from redis.exceptions import ConnectionError
 
-from Constants import ServerLoggerName, PlayerLoggerName
+from Constants import General, ServerLoggerName, PlayerLoggerName
 
 
 def init_logging(parsed_args: Namespace):
@@ -31,16 +31,31 @@ def init_logging(parsed_args: Namespace):
 
 
 def parse_args() -> Namespace:
-	parser = argparse.ArgumentParser(prog='YouSonos', description='Play YouTube tracks on Sonos loud speakers.')
-	parser.add_argument('--verbose', '-v', action='count',  default=0, help='Change the level of verbosity. '
+	out_stream_url = '--out-stream-url'
+	vlc_command = '--vlc-command'
+	parser = argparse.ArgumentParser(prog='YouSonos', description='Play YouTube tracks on Sonos loud speakers.',
+									 formatter_class=argparse.RawTextHelpFormatter)
+	parser.add_argument('--verbose', '-v', action='count',  default=0, help='Change the level of verbosity.\n'
 																			'Info: -v, Debug: -vv, Warn: default')
-	parser.add_argument('--host', '-i', action='store', help='The hostname or IP address for the server to listen on. '
-													   'Is set to flask-SocketIO default value if not specified.')
-	parser.add_argument('--port', '-p', action='store', help='The port number for the server to listen on. '
-													   'Is set to flask-SocketIO default value if not specified.')
+	parser.add_argument('--host', '-i', action='store', help='The hostname or IP address for the server to listen on.\n'
+													   'Defaults to:\n\t127.0.0.1 (flask-SocketIO default value)')
+	parser.add_argument('--port', '-p', action='store', help='The port number for the server to listen on.\n'
+													   'Defaults to:\n\t5000 (flask-SocketIO default value)')
 	parser.add_argument('--youtube-api-key', '-k', action='store', help='The YouTube API key. If not specified or invalid '
-																	  'the key word search is disabled and only YouTube '
+																	  'the keyword search is disabled and only YouTube '
 																	  'URLs and YouTube video IDs are valid search input.')
+	parser.add_argument(out_stream_url, action='store', help='URL of stream sent from YouSonos host to Sonos speakers.\n'
+															'Defaults to:\n\t'
+																 'http://<IP-of-this-host>:' + str(General.VLC_OUT_STREAM_DEFAULT_PORT)
+																 + '/' + General.OUT_STREAM_NAME +
+															'\nSee also option \'' + vlc_command + '\'.')
+	parser.add_argument(vlc_command, action='store', default=General.VLC_TRANSCODE_CMD, help='VLC player command to '
+														'transcode the incoming (YouTube) stream to the outgoing stream,'
+														' which can be picked up by the Sonos speakers.\nDefaults to:\n\t'
+														+ General.VLC_TRANSCODE_CMD +
+														'\nSee also option \'' + out_stream_url + '\'.')
+	parser.add_argument('--redis_url', action='store', default=General.REDIS_URL, help='URL of the redis instance.\n'
+															'Defaults to:\n\t' + General.REDIS_URL)
 	return parser.parse_args()
 
 
@@ -67,16 +82,8 @@ def player_main(parsed_args: Namespace) -> None:
 	main_logger = logging.getLogger(PlayerLoggerName.MAIN.value)
 	main_logger.info('Starting youSonos player ...')
 	wait_for_redis(main_logger)
-	from player import SonosEnvironment, Player, Track, Playlist, EventConsumer, SearchService
-	sonos_environment = SonosEnvironment.SonosEnvironment()
-	player = Player.Player(sonos_environment, parsed_args.verbose)
-	track_factory = Track.TrackFactory(player)
-	playlist = Playlist.Playlist(track_factory)
-	player.add_terminal_observer(playlist)
-	EventConsumer.PlayerEventsConsumer(sonos_environment, player, track_factory, playlist).start()
-	search_service = SearchService.SearchService(track_factory, parsed_args.youtube_api_key)
-	EventConsumer.SearchEventConsumer(search_service).start()
-	playlist.read_playlist_from_db()
+	from player import initialize
+	initialize(parsed_args)
 	main_logger.info('youSonos player successfully started.')
 
 
@@ -89,13 +96,14 @@ def server_main(parsed_args: Namespace) -> NoReturn:
 	wait_for_redis(main_logger)
 	from server import create_app
 	from server import socketio
-	app = create_app()
+	app = create_app(parsed_args)
 	socketio.run(app, host=parsed_args.host, port=parsed_args.port, log_output=True, log=logging.getLogger(ServerLoggerName.EVENTLET.value))
 
 
 if __name__ == '__main__':
 	mp.set_start_method('spawn')
 	parsed_args = parse_args()
+	print(parsed_args)
 	player_main(parsed_args)
 	mp.Process(target=server_main, args=(parsed_args,)).start()
 

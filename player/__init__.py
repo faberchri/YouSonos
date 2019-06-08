@@ -1,21 +1,22 @@
+from __future__ import annotations
+
 import json
 import logging
 import socket
-from typing import Any
-
 import redis
+
+from abc import ABC, abstractmethod
+from argparse import Namespace
 from flask_socketio import SocketIO
+from typing import Any, Dict, Callable, Iterable, Iterator, List, Set, ValuesView
 
-from Constants import General, DbKey, SendEvent, ReceiveEvent, PlayerLoggerName
+from Constants import *
 
-_db = redis.Redis()
-_socket = SocketIO(message_queue=General.REDIS_URL,
-				   logger=logging.getLogger(PlayerLoggerName.SOCKETIO.value),
-				   engineio_logger=logging.getLogger(PlayerLoggerName.ENGINEIO.value),
-				   # FIXME probably meaningless arg
-				   log=logging.getLogger(PlayerLoggerName.EVENTLET.value))
+_db = None
+_socket = None
 
 logger = logging.getLogger(PlayerLoggerName.UTIL.value)
+
 
 def save_in_db(key: DbKey, payload):
 	logger.debug("Save to db. key: '%s' | value: %s", key.value, payload)
@@ -47,21 +48,48 @@ def publish_on_player_command_channel(event: ReceiveEvent, data):
 								General.SID: None}))
 
 
-def get_own_ip() -> str:
+def get_own_ip(reference_ip="8.8.8.8", reference_port=80) -> str:
 
-	hostname = socket.gethostname()
+	# from https://stackoverflow.com/a/166589
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	try:
+		s.connect((reference_ip, reference_port))
+		own_ip = s.getsockname()[0]
+		logger.debug('Own IP resolved: %s (open socket: %s)', own_ip, s)
+		return own_ip
+	except socket.error:
+		logger.error('Detection of own IP failed. Exception on attempt to open socket to %s:%d.', reference_ip, reference_port)
+		raise
+	finally:
+		s.close()
 
-	# workaround to fix 'wrong IP if iPhone is connected in dev mode to computer (via USB)'
-	# socket.gethostbyname(hostname) returns the IP of the network interface 'iPhone USB (en3)' (e.g.: 169.254.51.36)
-	# instead of the IP of the Wi-Fi or ethernet network interface (e.g.: 192.168.0.45)
-	host_by_name_ex = socket.gethostbyname_ex(hostname)
-	logger.debug('socket.gethostbyname_ex(%s): %s', hostname, host_by_name_ex)
-	all_addresses = host_by_name_ex[2]
-	if not all_addresses:
-		raise ValueError('No network interface detected. Is computer connected to network?')
 
-	# get the first IP starting with '192' or else just the first in the list
-	own_ip = next((address for address in all_addresses if address.startswith('192')), all_addresses[0])
-	logger.debug('Own IP resolved: %s (hostname: %s)', own_ip, hostname)
+from .SonosEnvironment import SonosEnvironment, StreamConsumer
+from .Player import Player, PlayerObserver, PlayerStatus
+from .Track import Track, TrackStatus, NullTrack, TrackFactory, URL
+from .Playlist import Playlist
+from .PlaylistEntry import PlaylistEntry, PlaylistEntryFactory, PlaylistEntryStatus, ID, STATUS
+from .EventConsumer import EventConsumer, PlayerEventsConsumer, SearchEventConsumer
+from .SearchService import SearchService
 
-	return own_ip
+
+def initialize(args: Namespace):
+	global _db
+	_db = redis.from_url(args.redis_url)
+	global _socket
+	_socket = SocketIO(message_queue=args.redis_url,
+					   logger=logging.getLogger(PlayerLoggerName.SOCKETIO.value),
+					   engineio_logger=logging.getLogger(PlayerLoggerName.ENGINEIO.value),
+					   # FIXME probably meaningless arg
+					   log=logging.getLogger(PlayerLoggerName.EVENTLET.value))
+	sonos_environment = SonosEnvironment()
+	player = Player(args, sonos_environment)
+	track_factory = TrackFactory(args, player)
+	playlist_entry_factory = PlaylistEntryFactory(track_factory)
+	playlist = Playlist(playlist_entry_factory)
+	player.add_terminal_observer(playlist)
+	PlayerEventsConsumer(args, sonos_environment, player, track_factory, playlist).start()
+	search_service = SearchService(track_factory, args.youtube_api_key)
+	SearchEventConsumer(args, search_service).start()
+	playlist.read_playlist_from_db()
+

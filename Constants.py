@@ -7,7 +7,7 @@ def create_logger_name(*name_parts):
 
 class General:
 	APP_NAME = 'you_sonos'
-	REDIS_URL = 'redis://'
+	REDIS_URL = 'redis://localhost:6379/'
 	QUEUE_CHANNEL_NAME_PLAYER_COMMANDS = APP_NAME + '_player_commands'
 	QUEUE_CHANNEL_NAME_SEARCH = APP_NAME + '_search'
 
@@ -22,6 +22,13 @@ class General:
 	SOCKETIO_LOGGER_NAME_POSTFIX = 'socketio'
 	ENGINEIO_LOGGER_NAME_POSTFIX = 'engineio'
 	EVENTLET_LOGGER_NAME_POSTFIX = 'eventlet'
+
+	VLC_OUT_STREAM_DEFAULT_PORT = 8080
+	OUT_STREAM_NAME = 'yousonos.mp3'
+	VLC_STREAM_QUALITY = '192'
+	VLC_STREAM_NAME_AAC = 'yousonos.mp4'
+	VLC_TRANSCODE_CMD_AAC = ':sout=#transcode{aenc=ffmpeg{strict=-2},acodec=mp4a,ab=' + VLC_STREAM_QUALITY + '}:standard{mux=raw,dst=/' + VLC_STREAM_NAME_AAC + ',access=http,sap}'
+	VLC_TRANSCODE_CMD = ':sout=#transcode{acodec=mp3,ab=' + VLC_STREAM_QUALITY + '}:standard{mux=raw,dst=/' + OUT_STREAM_NAME + ',access=http,sap}'
 
 
 @unique

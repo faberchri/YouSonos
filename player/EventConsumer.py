@@ -1,27 +1,16 @@
-import json
-import logging
+from __future__ import annotations
+
 import threading
-from abc import abstractmethod
-from typing import Any
 
-import redis
-
-from Constants import General, ReceiveEvent, SendEvent, PlayerLoggerName
-from player.Player import Player
-from player.Playlist import Playlist
-from player.PlaylistEntry import ID
-from player.SearchService import SearchService
-from player.SonosEnvironment import SonosEnvironment
-from player.Track import URL, TrackFactory, Track
-from . import emit
+from . import *
 
 logger = logging.getLogger(PlayerLoggerName.EVENT_CONSUMER.value)
 
 class EventConsumer(threading.Thread):
 
-	def __init__(self, queue_name: str):
+	def __init__(self, args: Namespace, queue_name: str):
 		super(EventConsumer, self).__init__()
-		self.redis = redis.Redis(decode_responses=True)
+		self.redis = redis.from_url(args.redis_url, decode_responses=True)
 		self.redis_pubsub = self.redis.pubsub(ignore_subscribe_messages=True)
 		self.redis_pubsub.subscribe(queue_name)
 
@@ -49,8 +38,8 @@ class EventConsumer(threading.Thread):
 
 class PlayerEventsConsumer(EventConsumer):
 
-	def __init__(self, sonos_environment: SonosEnvironment, player: Player, track_factory: TrackFactory, playlist: Playlist):
-		super().__init__(General.QUEUE_CHANNEL_NAME_PLAYER_COMMANDS)
+	def __init__(self, args: Namespace, sonos_environment: SonosEnvironment, player: Player, track_factory: TrackFactory, playlist: Playlist):
+		super().__init__(args, General.QUEUE_CHANNEL_NAME_PLAYER_COMMANDS)
 		self._sonos_environment = sonos_environment
 		self._player = player
 		self._track_factory = track_factory
@@ -90,8 +79,8 @@ class PlayerEventsConsumer(EventConsumer):
 
 class SearchEventConsumer(EventConsumer):
 
-	def __init__(self, search_service: SearchService):
-		super().__init__(General.QUEUE_CHANNEL_NAME_SEARCH)
+	def __init__(self, args: Namespace, search_service: SearchService):
+		super().__init__(args, General.QUEUE_CHANNEL_NAME_SEARCH)
 		self._search_service = search_service
 
 	def run_event(self, event: ReceiveEvent, sid: str, payload: Any):

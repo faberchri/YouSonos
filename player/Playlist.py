@@ -1,19 +1,16 @@
-from typing import List, Callable
-from uuid import UUID
-import time
+from __future__ import annotations
 
-from Constants import DbKey, SendEvent
-from player.Player import PlayerObserver, PlayerStatus
-from player.PlaylistEntry import PlaylistEntry, PlaylistEntryFactory, PlaylistEntryStatus
-from player.Track import Track, TrackFactory
-from . import save_and_emit, read_list_from_db
+import time
+from uuid import UUID
+
+from . import *
 
 
 class Playlist(PlayerObserver):
 
-	def __init__(self, track_factory: TrackFactory):
+	def __init__(self, playlist_entry_factory: PlaylistEntryFactory):
 		super().__init__()
-		self._playlist_entry_factory = PlaylistEntryFactory(track_factory)
+		self._playlist_entry_factory = playlist_entry_factory
 		self.playlist_entries: List[PlaylistEntry] = []
 
 	def player_status_changed(self, previous_status: PlayerStatus, new_status: PlayerStatus, current_track: Track) -> None:
@@ -34,8 +31,7 @@ class Playlist(PlayerObserver):
 
 	def on_current(self, callback: [Callable[[PlaylistEntry], None]]) -> None:
 		if self.playlist_entries:
-			current = next((entry for entry in self.playlist_entries
-							if entry.playlist_entry_status == PlaylistEntryStatus.CURRENT), self.playlist_entries[0])
+			current = next((entry for entry in self.playlist_entries if entry.is_current()), self.playlist_entries[0])
 			callback(current)
 
 	def play_previous(self) -> None:

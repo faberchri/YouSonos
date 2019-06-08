@@ -1,11 +1,8 @@
-import logging
-from abc import abstractmethod, ABC
-from typing import List, Any, Dict, ValuesView
+from __future__ import annotations
 
 import soco
 
-from Constants import SendEvent, DbKey, PlayerLoggerName
-from . import save_and_emit
+from . import *
 
 INITIAL_SONOS_VOLUME = 5
 
@@ -14,7 +11,7 @@ logger = logging.getLogger(PlayerLoggerName.SONOS_ENVIRONMENT.value)
 class StreamConsumer(ABC):
 
 	@abstractmethod
-	def play_stream(self, stream_url: str, stream_name: str) -> None: raise NotImplementedError
+	def play_stream(self, track: Track) -> None: raise NotImplementedError
 
 
 class SonosEnvironment(StreamConsumer):
@@ -48,11 +45,13 @@ class SonosEnvironment(StreamConsumer):
 		sonos_setup = self._create_sonos_setup_dict()
 		save_and_emit(DbKey.SONOS_SETUP, event, sonos_setup, skip_sid=originator_sid)
 
-	def play_stream(self, stream_url: str, stream_name: str) -> None:
-		logger.debug('Tuning Sonos coordinator devices (%s) to VLC stream ...', self.sonos_coordinators)
+	def play_stream(self, track: Track) -> None:
+		stream_url = track.get_out_stream_url(self.sonos_coordinators[0].ip_address)
+		logger.debug('Tuning Sonos coordinator devices (%s) to stream on %s ...', self.sonos_coordinators, stream_url)
 		for sonos_coordinator in self.sonos_coordinators:
 			sonos_coordinator.stop()
-			sonos_coordinator.play_uri(stream_url, title='vlc-stream')
+			title = '{} - {}'.format(track.get_title(), track.get_artist())
+			sonos_coordinator.play_uri(stream_url, title=title, force_radio=True)
 			logger.debug('Sonos coordinator (%s) started playing URL %s', sonos_coordinator, stream_url)
 
 	def _find_sonos_devices(self) -> Dict[str, Any]:
@@ -71,4 +70,3 @@ class SonosEnvironment(StreamConsumer):
 			raise ValueError('No Sonos coordinator device found. Found devices: {0}'.format(sonos_devices))
 		logger.debug('Found Sonos coordinator devices: %s', coordinators)
 		return coordinators
-

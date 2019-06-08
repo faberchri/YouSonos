@@ -1,17 +1,13 @@
-import logging
-from abc import abstractmethod, ABC
-from typing import List, Dict, Iterator, Iterable
+from __future__ import annotations
 
 from concurrent.futures import Executor, as_completed, Future, CancelledError, TimeoutError
 from concurrent.futures.thread import ThreadPoolExecutor
 from threading import Lock
 
+from googleapiclient.errors import Error
 from googleapiclient.discovery import build, Resource
 
-from Constants import SendEvent, PlayerLoggerName
-from player.Track import TrackFactory, Track
-
-from . import emit
+from . import *
 
 YOUTUBE_API_SERVICE_NAME = 'youtube'
 YOUTUBE_API_VERSION = 'v3'
@@ -24,7 +20,6 @@ NUMBER_OF_WORKERS = 5
 
 logger = logging.getLogger(PlayerLoggerName.SEARCH_SERVICE.value)
 logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
-
 
 
 class SearchResult(Iterable[Track]):
@@ -165,7 +160,9 @@ class SearchTask:
 		self._search_term = search_term
 		self._sid = sid
 		self._executor = executor
-		self._search_strategies = [PlaylistSearchStrategy(track_factory), TrackSearchStrategy(track_factory), KeywordSearchStrategy(track_factory, youtube_api)]
+		self._search_strategies = [PlaylistSearchStrategy(track_factory), TrackSearchStrategy(track_factory)]
+		if youtube_api:
+			self._search_strategies.append(KeywordSearchStrategy(track_factory, youtube_api))
 		# appending and extending a list is thread-safe according to
 		# https://stackoverflow.com/questions/6319207/are-lists-thread-safe and
 		# http://effbot.org/pyfaq/what-kinds-of-global-value-mutation-are-thread-safe.htm
@@ -304,8 +301,16 @@ class SearchService:
 		self._youtube_api_key = youtube_api_key
 		self._executor = ThreadPoolExecutor(max_workers=NUMBER_OF_WORKERS, thread_name_prefix='SearchServiceThread')
 		self._search_tasks: Dict[str, SearchTask] = {}
-		self._youtube_api: Resource = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-						developerKey=youtube_api_key)
+		self._youtube_api: Resource = None
+		if self._youtube_api_key:
+			try:
+				self._youtube_api: Resource = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+						developerKey=self._youtube_api_key)
+			except Error:
+				logger.warning('Error on attempt to initialize YouTube API service. Did you specify an invalid API key? '
+							   'Keyword search will be disabled.', exc_info=True)
+		else:
+			logger.info('No Google / YouTube API key was specified. Keyword search will be disabled.')
 
 	def run_search(self, search_term: str, batch_index: int, requested_search_indices: List[int], sid: str) -> None:
 		logger.info('run search for \'%s\' of %s (requested search result indices: %s)', search_term, sid, requested_search_indices)

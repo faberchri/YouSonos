@@ -1,19 +1,9 @@
 from __future__ import annotations
 
-import logging
 import time
-from abc import abstractmethod, ABC
-from enum import Enum, unique
-from typing import Callable, Any, TYPE_CHECKING, Set
 
-from Constants import DbKey, SendEvent, ReceiveEvent, PlayerLoggerName
-from player import vlc
-from player.SonosEnvironment import StreamConsumer
-from player.vlc import MediaPlayer, Instance
-
-if TYPE_CHECKING:
-	from player.Track import Track
-from . import emit, save_and_emit, publish_on_player_command_channel, get_own_ip
+from . import *
+from .vlc import MediaPlayer, Instance, EventType
 
 logger = logging.getLogger(PlayerLoggerName.PLAYER.value)
 
@@ -34,19 +24,19 @@ NETWORK_CACHING_DURATION_IN_SECONDS = 2
 
 class Player:
 
-	def __init__(self, stream_consumer: StreamConsumer, verbosity_level: int):
+	def __init__(self, args: Namespace, stream_consumer: StreamConsumer):
 		self._observers: Set[PlayerObserver] = set()
 		self._terminal_observers: Set[PlayerObserver] = set()
 		self._stream_consumer = stream_consumer
 		vlc_args = ["--network-caching=" + str(NETWORK_CACHING_DURATION_IN_SECONDS * 1000)]
-		if verbosity_level > 0:
-			vlc_args.append('-' + 'v' * verbosity_level)
+		if args.verbose > 0:
+			vlc_args.append('-' + 'v' * args.verbose)
 		logger.debug('Init new VLC player with args %s ...', str(vlc_args))
-		self._vlc_instance: Instance = vlc.Instance(vlc_args)
+		self._vlc_instance: Instance = Instance(vlc_args)
 		self._vlc_player: MediaPlayer = self._vlc_instance.media_player_new()
 		logger.info('VLC player created. Player: %s', self._vlc_player)
-		from player.Track import NullTrack, TrackStatus
-		self._null_track = NullTrack(self, TrackStatus.STOPPED)
+		from .Track import NullTrack, TrackStatus
+		self._null_track = NullTrack(args, self, TrackStatus.STOPPED)
 		self._set_track(self._null_track)
 		self._player_state = PlayerStatus.STOPPED
 		self._update_player_state(PlayerStatus.STOPPED)
@@ -114,9 +104,7 @@ class Player:
 		self._update_player_state(PlayerStatus.PLAYING)
 
 	def _init_stream_consumer(self):
-		vlc_stream_name = self._track.get_vlc_stream_name()
-		stream_url = 'http://{}:8080/{}'.format(get_own_ip(), vlc_stream_name)
-		self._stream_consumer.play_stream(stream_url, vlc_stream_name)
+		self._stream_consumer.play_stream(self._track)
 
 	def _pause(self) -> None:
 		r = self._vlc_player.pause()
@@ -134,13 +122,13 @@ class Player:
 
 	def _init_track_end_callback(self) -> None:
 		event_manager = self._vlc_player.event_manager()
-		event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, self._get_track_end_callback())
+		event_manager.event_attach(EventType.MediaPlayerEndReached, self._get_track_end_callback())
 
 	def _init_player_time_callback(self) -> None:
 		event_manager = self._vlc_player.event_manager()
 		def callback(event):
 			emit(SendEvent.PLAYER_TIME, event.u.new_time)
-		event_manager.event_attach(vlc.EventType.MediaPlayerTimeChanged, callback)
+		event_manager.event_attach(EventType.MediaPlayerTimeChanged, callback)
 
 	def _get_track_end_callback(self) -> Callable[[Any], None]:
 		def callback(event):
