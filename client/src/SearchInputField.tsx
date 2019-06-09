@@ -106,7 +106,7 @@ class SearchInputField extends React.Component<Props, State> {
         return (
                 <TextField
                     error={this.props.indicateError}
-                    label="YouTube-URL, track id, playlist id, or keywords"
+                    label="YouTube URL, ID, or keywords"
                     className={classes.textField}
                     margin="dense"
                     variant="outlined"

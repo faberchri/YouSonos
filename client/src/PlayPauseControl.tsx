@@ -1,4 +1,5 @@
 import React from "react";
+import classNames from 'classnames';
 import {
     CurrentPlayerState,
     playerState,
@@ -15,6 +16,7 @@ import PlayArrow from '@material-ui/icons/PlayArrowRounded';
 import Pause from '@material-ui/icons/PauseRounded';
 import Previous from '@material-ui/icons/SkipPreviousRounded';
 import Next from '@material-ui/icons/SkipNextRounded';
+import Grid from '@material-ui/core/Grid';
 
 interface State {
     playPreviousButtonDisabled: boolean;
@@ -27,12 +29,20 @@ const styles = (theme: Theme) => createStyles({
     root: {
         marginTop: '10px',
     },
-    sideButton: {
-        transform: 'scale(0.7)'
+    leftButtonGridItem: {
+        textAlign: 'right',
     },
-    middleButton: {
-
-    }
+    rightButtonGridItem: {
+        textAlign: 'left'
+    },
+    button: {
+        width: 'inherit',
+        minWidth: 'inherit',
+    },
+    leftButton: {
+    },
+    rightButton: {
+    },
 });
 
 interface Props extends WithStyles<typeof styles> {}
@@ -61,7 +71,7 @@ class PlayPauseControl extends React.Component<Props, State> {
                 playPreviousButtonDisabled: this.state.playPreviousButtonDisabled,
                 playButtonDisabled: false,
                 playNextButtonDisabled: this.state.playNextButtonDisabled,
-                icon: <PlayArrow/>
+                icon: <PlayArrow />
             });
             return;
         } else if (playerState === 'PLAYING') {
@@ -69,7 +79,7 @@ class PlayPauseControl extends React.Component<Props, State> {
                 playPreviousButtonDisabled: this.state.playPreviousButtonDisabled,
                 playButtonDisabled: false,
                 playNextButtonDisabled: this.state.playNextButtonDisabled,
-                icon: <Pause/>,
+                icon: <Pause />,
             });
             return;
         }
@@ -93,7 +103,7 @@ class PlayPauseControl extends React.Component<Props, State> {
             playPreviousButtonDisabled: true,
             playButtonDisabled: true,
             playNextButtonDisabled: true,
-            icon: <PlayArrow/>
+            icon: <PlayArrow fontSize="large"/>
         };
     }
 
@@ -105,37 +115,54 @@ class PlayPauseControl extends React.Component<Props, State> {
 
             <div className={classes.root}>
 
+                <Grid
+                    container
+                    direction="row"
+                    justify="center"
+                    alignItems="center"
+                >
 
-                    <Button variant="outlined"
-                            color="primary"
-                            aria-label="Previous"
-                            className={classes.sideButton}
-                            disabled={this.state.playPreviousButtonDisabled}
-                            onClick={playPreviousTrack}
-                            >
-                        <Previous/>
-                    </Button>
+                    <Grid item xs={4} className={classes.leftButtonGridItem}>
+                        <Button variant="outlined"
+                                color="primary"
+                                aria-label="Previous"
+                                className={classNames(classes.button, classes.leftButton)}
+                                disabled={this.state.playPreviousButtonDisabled}
+                                onClick={playPreviousTrack}
+                                size="small"
+                        >
 
-                    <Button variant="outlined"
-                            color="primary"
-                            aria-label="Play/Pause"
-                            className={classes.middleButton}
-                            disabled={this.state.playButtonDisabled}
-                            onClick={togglePlayPause}
-                            >
-                        {this.state.icon}
-                    </Button>
+                            <Previous fontSize="small"/>
+                        </Button>
+                    </Grid>
 
+                    <Grid item xs={4}>
+                        <Button variant="outlined"
+                                color="primary"
+                                aria-label="Play/Pause"
+                                className={classes.button}
+                                disabled={this.state.playButtonDisabled}
+                                onClick={togglePlayPause}
+                                size="small"
+                        >
+                            {this.state.icon}
+                        </Button>
+                    </Grid>
 
-                    <Button variant="outlined"
-                            color="primary"
-                            aria-label="Next"
-                            className={classes.sideButton}
-                            disabled={this.state.playNextButtonDisabled}
-                            onClick={playNextTrack}
-                            >
-                        <Next/>
-                    </Button>
+                    <Grid item xs={4} className={classes.rightButtonGridItem}>
+                        <Button variant="outlined"
+                                color="primary"
+                                aria-label="Next"
+                                className={classNames(classes.button, classes.rightButton)}
+                                disabled={this.state.playNextButtonDisabled}
+                                onClick={playNextTrack}
+                                size="small"
+                        >
+                            <Next fontSize="small"/>
+                        </Button>
+                    </Grid>
+                </Grid>
+
 
 
             </div>
