@@ -3,6 +3,7 @@
 import argparse
 import multiprocessing as mp
 import time
+import urllib.request
 from argparse import Namespace
 from typing import NoReturn
 
@@ -37,10 +38,14 @@ def parse_args() -> Namespace:
 									 formatter_class=argparse.RawTextHelpFormatter)
 	parser.add_argument('--verbose', '-v', action='count',  default=0, help='Change the level of verbosity.\n'
 																			'Info: -v, Debug: -vv, Warn: default')
-	parser.add_argument('--host', '-i', action='store', help='The hostname or IP address for the server to listen on.\n'
-													   'Defaults to:\n\t127.0.0.1 (flask-SocketIO default value)')
-	parser.add_argument('--port', '-p', action='store', help='The port number for the server to listen on.\n'
-													   'Defaults to:\n\t5000 (flask-SocketIO default value)')
+	parser.add_argument('--host', '-i', action='store', default=General.HOST_DEFAULT_URL, help='The hostname or IP address '
+														'for the server to listen on.\n'
+														'Defaults to:\n\t' + General.HOST_DEFAULT_URL
+														+ ' (flask-SocketIO default value)')
+	parser.add_argument('--port', '-p', action='store', default=General.HOST_DEFAULT_PORT, help='The port number for the '
+														'server to listen on.\n'
+														'Defaults to:\n\t' + str(General.HOST_DEFAULT_PORT) +
+														' (flask-SocketIO default value)')
 	parser.add_argument('--youtube-api-key', '-k', action='store', help='The YouTube API key. If not specified or invalid '
 																	  'the keyword search is disabled and only YouTube '
 																	  'URLs and YouTube video IDs are valid search input.')
@@ -100,10 +105,22 @@ def server_main(parsed_args: Namespace) -> NoReturn:
 	socketio.run(app, host=parsed_args.host, port=parsed_args.port, log_output=True, log=logging.getLogger(ServerLoggerName.EVENTLET.value))
 
 
+def wait_for_server(parsed_args) -> None:
+	url_with_port = "http://{}:{}".format(parsed_args.host, parsed_args.port)
+	while True:
+		time.sleep(1)
+		try:
+			urllib.request.urlopen(url_with_port)
+			print("YouSonos started at: " + url_with_port)
+			break
+		except urllib.error.URLError:
+			pass
+
+
 if __name__ == '__main__':
 	mp.set_start_method('spawn')
 	parsed_args = parse_args()
-	print(parsed_args)
 	player_main(parsed_args)
 	mp.Process(target=server_main, args=(parsed_args,)).start()
+	wait_for_server(parsed_args)
 

@@ -7,6 +7,8 @@ def create_logger_name(*name_parts):
 
 class General:
 	APP_NAME = 'you_sonos'
+	HOST_DEFAULT_URL = '127.0.0.1'
+	HOST_DEFAULT_PORT = 5000
 	REDIS_URL = 'redis://localhost:6379/'
 	QUEUE_CHANNEL_NAME_PLAYER_COMMANDS = APP_NAME + '_player_commands'
 	QUEUE_CHANNEL_NAME_SEARCH = APP_NAME + '_search'
