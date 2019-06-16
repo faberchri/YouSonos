@@ -1,8 +1,8 @@
 # YouSonos
 Play YouTube audio streams on the Sonos loudspeakers in your local network.
 
-<p style="display:block;text-align:center">
-    ![YouSonos Demo](documentation/YouSonos_Demo_1.gif)
+<p align="center">
+    <img width="309" height="551" src="documentation/YouSonos_Demo_1.gif">
 </p>
 
 YouSonos is a streaming server that runs on a computer in your local network.
@@ -125,8 +125,7 @@ network interface of the Pi).
 
 ## Implementation
 
-<p style="display:block;text-align:center">
-    ![YouSonos Architecture](documentation/YouSonos_architecture.svg)
+<p align="center">
     <img src="documentation/YouSonos_architecture.svg">
 </p>
 
