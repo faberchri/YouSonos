@@ -28,7 +28,7 @@ Prerequisites: Docker and docker-compose need to be installed.
 
 0. Clone this repo and `cd` into it.
 
-0. Build the docker image:
+0. Build the docker image (this takes a while):
     ```
     docker-compose build
     ```
@@ -162,10 +162,10 @@ The back end is written in Python and consists roughly of the following componen
     and [youtube-dl](https://ytdl-org.github.io/youtube-dl/index.html).
     * Determines the actual stream URL from a YouTube id.
     * Instructs libVLC to setup or tear down a stream.
-    * Manages the tracks the playlist.
+    * Manages the playlist.
     * Controls the Sonos system, i.e. tells Sonos the URL of the stream to play (outgoing stream from server to Sonos).
 
-* YouSonos search service:
+* [YouSonos search service](player/SearchService.py):
     * Receives search events from the YouSonos player event consumer.
     * Publishes search result events to flask-socketIO, which are subsequently forwarded to the client that initiated the search.
     * Resolves the stream URL and track meta data for YouTube URLs, YouTube track ids, and YouTube playlist with 
@@ -175,7 +175,7 @@ The back end is written in Python and consists roughly of the following componen
 * [libVLC](https://www.videolan.org/vlc/libvlc.html) (the library backing the VLC player)
     * Is used for the actual audio stream processing. 
     * Reads a stream from YouTube, transforms it and sends it to the Sonos speakers over http. 
-    * YouSonos registers callback in libVLC to receive updates on track progress and end. 
+    * YouSonos registers callbacks in libVLC to receive updates on track progress and end. 
     * The parameters passed to VLC to setup the audio stream from the server to the Sonos speakers can be controlled by 
 the command line option `--vlc-command`. The default command is:
         ```
@@ -186,16 +186,17 @@ the command line option `--vlc-command`. The default command is:
 
 * Sonos system:
     * The [SoCo library](http://python-soco.com/) is used for the interaction with the Sonos system.
-    * At server startup the available speakers and the coordinators are detected.
+    * At server startup the available speakers and the system coordinators are detected.
     * Allows to set individual volume levels for each detected speaker.
 * [Redis](https://redis.io/) database and message queue:
     * YouSonos persists data that must survive a server restart as key-value pairs to Redis (i.e. the playlist).
-    * YouSonos creates two flask-socketIO server instances in two separated processes.
-    These instances communicate through a Redis message queue.
-    The two flask-socketIO server instances in separated processes are required because two different parallelism paradigms
-    are applied. YouSonos player and YouSonos search service use common python threads but YouSonos server is 
+    * YouSonos creates two flask-socketIO server instances in two separate processes.
+    These server instances communicate through a Redis message queue.
+    The two flask-socketIO server instances in separate processes are required because YouSonos applies two different 
+    parallelism paradigms.
+    YouSonos player and YouSonos search service use common Python threads, but YouSonos server is 
     based on [eventlet](https://eventlet.net/) which uses coroutines to enable non-blocking I/O.
-    * Forwarding and sequencing of client events received by the YouSonos server to the YouSonos player and YouSonos
+    * Sequences client events received by the YouSonos server and forwards them to the YouSonos player or YouSonos
     search service via the YouSonos event consumers.
 
 
