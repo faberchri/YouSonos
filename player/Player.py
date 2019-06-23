@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 
 from . import *
-from .vlc import MediaPlayer, Instance, EventType
+from vlc import MediaPlayer, Instance, EventType
 
 logger = logging.getLogger(PlayerLoggerName.PLAYER.value)
 

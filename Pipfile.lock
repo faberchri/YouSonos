@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ebaf7eae5356db174ea0436cf3d21765f89ef76e6aeaea89f7152c4f99859d9c"
+            "sha256": "6f5a0a90eea04d9bf086062d43608d1ae1e0e1a1df9394c95850dc7fbb0be0c4"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -25,10 +25,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:59b7658e26ca9c7339e00f8f4636cdfe59d34fa37b9b04f6f9e9926b3cece1a5",
-                "sha256:b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae"
+                "sha256:046832c04d4e752f37383b628bc601a7ea7211496b4638f6514d0e5b9acc4939",
+                "sha256:945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695"
             ],
-            "version": "==2019.3.9"
+            "version": "==2019.6.16"
         },
         "chardet": {
             "hashes": [
@@ -68,11 +68,11 @@
         },
         "flask-socketio": {
             "hashes": [
-                "sha256:841dc9636fcf0659223745434b7ceef56f716fede2311ec26cb97af30648ca22",
-                "sha256:f44b2fc91149c1b2b522c8fd64824d10d4e38d535c2cb76623c22b1e9eeb9de9"
+                "sha256:aced332903522a52822fb1e21744549510ce8b26e074422d4cd9aff68e43be5b",
+                "sha256:f6f7e0205f0dd92d98a87e3f6d26d94ade29ca380ba383b505070674c804ae2e"
             ],
             "index": "pypi",
-            "version": "==4.0.0"
+            "version": "==4.1.0"
         },
         "google-api-python-client": {
             "hashes": [
@@ -224,6 +224,14 @@
             ],
             "version": "==4.1.0"
         },
+        "python-vlc": {
+            "hashes": [
+                "sha256:0c2c6b4e4b0cad162a694e7740a8571f12fd7eebacd5b55c93e457f917b89cd7",
+                "sha256:fd24075cde4febb9611d5be412ba8d3998a8c59d24dd9d1d2b76376dc831bc7b"
+            ],
+            "index": "pypi",
+            "version": "==3.0.6109"
+        },
         "redis": {
             "hashes": [
                 "sha256:6946b5dca72e86103edc8033019cc3814c031232d339d5f4533b02ea85685175",
@@ -292,11 +300,11 @@
         },
         "youtube-dl": {
             "hashes": [
-                "sha256:6091e44d2f7ceb99c24b81204b9238681275706e95fcd40ad8b001e0ebd74787",
-                "sha256:93ca1ff30b99223318305cf4f30a02b8ea2cf5fdd2816f83d60aaa3c1bb19432"
+                "sha256:871a49c899709ad24e00da9ff88d165e399669439763ee0baa4b52929e84933d",
+                "sha256:a64ffda79f467c81877d5452d775ebf858b43853ff7ce8644be3a80ebf3f9ea9"
             ],
             "index": "pypi",
-            "version": "==2019.6.8"
+            "version": "==2019.6.21"
         }
     },
     "develop": {}

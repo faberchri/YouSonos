@@ -13,6 +13,7 @@ flask-socketio = "*"
 eventlet = "*"
 redis = "*"
 google-api-python-client = "*"
+python-vlc = "*"
 
 [requires]
 python_version = "3.7"
