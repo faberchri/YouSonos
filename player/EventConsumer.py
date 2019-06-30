@@ -15,25 +15,28 @@ class EventConsumer(threading.Thread):
 		self.redis_pubsub.subscribe(queue_name)
 
 	def run(self):
-		for message in self.redis_pubsub.listen():
-			self.handle_message(message)
-		self.redis_pubsub.close()
+		try:
+			for message in self.redis_pubsub.listen():
+				try:
+					self.handle_message(message)
+				except Exception as e:
+					logger.exception('Exception in main loop of %s when handling message: %s', type(self).__name__, message)
+		finally:
+			self.redis_pubsub.unsubscribe()
+			self.redis_pubsub.punsubscribe()
+			self.redis_pubsub.close()
 
 	def handle_message(self, message) -> None:
-		logger.info('handler call')
+		logger.debug('%s received message: %s', type(self).__name__, message)
 		message_dict = json.loads(message['data'])
 		event = ReceiveEvent(message_dict[General.EVENT_NAME])
 		payload = message_dict[General.EVENT_PAYLOAD]
 		sid = message_dict[General.SID]
-		logger.info('Player received event \'%s\' with payload: %s', event.value, payload)
+		logger.info('%s received event \'%s\' from \'%s\' with payload: %s', type(self).__name__, event.value, sid, payload)
 		self.run_event(event, sid, payload)
 
 	@abstractmethod
 	def run_event(self, event: ReceiveEvent, sid: str, payload: Any) -> None: raise NotImplementedError
-
-	def stop(self):
-		self.redis_pubsub.unsubscribe()
-		self.redis_pubsub.punsubscribe()
 
 
 class PlayerEventsConsumer(EventConsumer):
