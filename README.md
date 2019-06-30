@@ -202,7 +202,8 @@ the command line option `--vlc-command`. The default command is:
 
 ## Known Issues
 * Fails on start up if Sonos system is split up in multiple zones (multiple coordinators).
-* Tracks can't be played after they have been contained in the playlist for a long time (YouTube stream URL expires).
+* ~~Tracks can't be played after they have been contained in the playlist for a long time (YouTube stream URL expires).~~ 
+Fixed with 8b18f994b2a9cdab86d8293317b5872049f87970 .
 * The last few seconds of a track are skipped.
 * Some YouTube tracks refuse to play. Examples needed.
 
