@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import re
 
+from random import randint
+from datetime import timedelta, datetime
+
 import pafy
 from pafy.backend_shared import BasePafy
 
@@ -12,6 +15,8 @@ TYPE = 'track_type'
 STATUS = 'track_status'
 COVER_URL= 'cover_url'
 DURATION= 'duration'
+
+AVERAGE_TRACK_VALIDITY_IN_HOURS = 3
 
 logger = logging.getLogger(PlayerLoggerName.TRACK.value)
 
@@ -117,12 +122,27 @@ class YouTubeTrack(Track):
 		self._pafy_initialized = False
 		self._url = url
 		self._pafy: BasePafy = pafy
-		logger.debug('Resolved youtube video: %s', url)
+		self._expiration_timestamp = self._get_new_expiration_date()
+
+	def _get_new_expiration_date(self) -> datetime:
+		# YouTube stream URLs expire after a certain time, probably after one or two days.
+		# Furthermore a track could be removed from YouTube or its content (e.g. metadata) can change.
+		# Therefore we periodically try to reload the track.
+		# We add some randomness to the expiration timestamp to prevent reloading multiple tracks at the same time.
+		#
+		# TODO: handling of tracks that can no longer be resolved (i.e. tracks that have been removed from YouTube).
+		#  Playlist update? What else?
+		return datetime.now() + timedelta(hours=AVERAGE_TRACK_VALIDITY_IN_HOURS, minutes=randint(-60, 60))
+
+	def _is_expired(self) -> bool:
+		return self._expiration_timestamp < datetime.now()
 
 	@property
 	def _pafy_data(self) -> BasePafy:
-		if not self._pafy:
+		if not self._pafy or self._is_expired():
 			self._pafy: BasePafy = pafy.new(self._url)
+			self._expiration_timestamp = self._get_new_expiration_date()
+			logger.info('Resolved youtube video (expires at: %s): %s', self._expiration_timestamp.isoformat(), self._pafy)
 		return self._pafy
 
 	def get_title(self) -> str:
@@ -229,14 +249,13 @@ class TrackFactory:
 		return YouTubeTrack(self._args, self._player, track_status, url, pafy_data)
 
 	def create_youtube_tracks_from_playlist(self, preprocessed_url: str) -> [YouTubeTrack]:
-		try:
-			raw_playlist = pafy.get_playlist(preprocessed_url)
-		except Exception:
-			return []
-		if not raw_playlist['items']:
+		playlist = pafy.get_playlist(preprocessed_url)
+		playlist_items = playlist['items']
+		if not playlist_items:
 			logger.warning('Playlist at URL \'{}\' exists but does not contain any items. Resolved playlist: {}'
-							 .format(preprocessed_url, raw_playlist))
-		return [YouTubeTrack(self._args, self._player, TrackStatus.STOPPED, item['pafy'].videoid, item['pafy']) for item in raw_playlist['items']]
+							 .format(preprocessed_url, playlist))
+			return []
+		return [YouTubeTrack(self._args, self._player, TrackStatus.STOPPED, item['pafy'].videoid, item['pafy']) for item in playlist_items]
 
 	def _create_youtube_track_from_dict(self, track_dict) -> YouTubeTrack:
 		return self.create_youtube_track(track_dict[URL], track_status=TrackStatus(track_dict[STATUS]))

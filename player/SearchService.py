@@ -56,6 +56,7 @@ class UrlBasedSearchStrategy(SearchStrategy):
 		try:
 			return UrlBasedSearchResult(self.resolve_url(url))
 		except Exception:
+			logger.debug("Exception when resolving the URL '%s'.", url, exc_info=True)
 			return UrlBasedSearchResult([])
 
 	@abstractmethod
@@ -265,7 +266,7 @@ class SearchTask:
 	def _fetch_property_dict(self, track_future: Future, result_batch_futures: List[Future], result_batch: [SearchResultTrack]):
 		def description():
 			result_track = result_batch[result_batch_futures.index(track_future)]
-			return 'track dict of \'%s\''.format(str(result_track))
+			return 'track dict of \'{}\''.format(str(result_track))
 		return self._fetch_result(track_future, None, description)
 
 	def _emit_search_result(self, batch_index: int, property_dicts):
