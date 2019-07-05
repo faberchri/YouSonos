@@ -15,7 +15,8 @@ interface State {
 
 const styles = (theme: Theme) => createStyles({
     root: {
-        margin: '5px',
+        marginLeft: '5px', // no margin on top and bottom in order to have equal margins between components as on sides
+        marginRight: '5px',
         paddingTop: '5px',
         paddingBottom: '5px',
         minHeight: '100px',
