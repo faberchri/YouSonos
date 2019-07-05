@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
+    <link rel="shortcut icon" href="%PUBLIC_URL%/logo-192.png">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="theme-color" content="#000000">
     <!--
@@ -19,6 +19,17 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
+    <!--
+      see https://github.com/GoogleChromeLabs/pwacompat
+      enables use of YouSonos icon if added to home screen (only tested on iOS)
+      png (alo used as favicon) created with: http://cthedot.de/icongen/
+
+      Using https://realfavicongenerator.net/ also tested but the chosen approach seems to work better at least on iOS,
+      plus requires less additional image files.
+     -->
+    <script async src="https://cdn.jsdelivr.net/npm/pwacompat@2.0.9/pwacompat.min.js"
+            integrity="sha384-VcI6S+HIsE80FVM1jgbd6WDFhzKYA0PecD/LcIyMQpT4fMJdijBh0I7Iblaacawc"
+            crossorigin="anonymous"></script>
     <title>YouSonos</title>
   </head>
   <body>
