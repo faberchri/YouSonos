@@ -248,7 +248,7 @@ class TrackFactory:
 			pafy_data = pafy.new(url)
 		return YouTubeTrack(self._args, self._player, track_status, url, pafy_data)
 
-	def create_youtube_tracks_from_playlist(self, preprocessed_url: str) -> [YouTubeTrack]:
+	def create_youtube_tracks_from_playlist(self, preprocessed_url: str) -> List[YouTubeTrack]:
 		playlist = pafy.get_playlist(preprocessed_url)
 		playlist_items = playlist['items']
 		if not playlist_items:

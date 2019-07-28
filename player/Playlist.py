@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import time
+from concurrent.futures import FIRST_EXCEPTION, CancelledError, TimeoutError, wait
+from concurrent.futures.thread import ThreadPoolExecutor
 from uuid import UUID
 
 from . import *
 
+MIN_NUMBER_OF_PLAYLIST_PROPERTY_DICT_RESOLVER_THREADS = 10
+MAX_NUMBER_OF_PLAYLIST_PROPERTY_DICT_RESOLVER_THREADS = 1000
+MAX_PLAYLIST_PROPERTY_DICT_RESOLUTION_WAIT_TIME_IN_SECS = 20
+PLAYLIST_PROPERTY_DICT_RESOLVER_THREAD_PREFIX = 'PlaylistPropertyDictResolverThread'
 
 class Playlist(PlayerObserver):
 
@@ -12,6 +18,10 @@ class Playlist(PlayerObserver):
 		super().__init__()
 		self._playlist_entry_factory = playlist_entry_factory
 		self.playlist_entries: List[PlaylistEntry] = []
+		self._playlist_entry_property_dict_resolver_count = MIN_NUMBER_OF_PLAYLIST_PROPERTY_DICT_RESOLVER_THREADS
+		self._playlist_entry_property_dict_resolver_executor = ThreadPoolExecutor(
+			max_workers=self._playlist_entry_property_dict_resolver_count,
+			thread_name_prefix=PLAYLIST_PROPERTY_DICT_RESOLVER_THREAD_PREFIX)
 
 	def player_status_changed(self, previous_status: PlayerStatus, new_status: PlayerStatus, current_track: Track) -> None:
 		self._save_and_emit_playlist()
@@ -107,8 +117,42 @@ class Playlist(PlayerObserver):
 			entry.update_playlist_entry_stati()
 		self.on_current(update_stati)
 
+	def _adjust_playlist_entry_property_dict_resolver_executor(self):
+		playlist_size = len(self.playlist_entries)
+		if self._playlist_entry_property_dict_resolver_count != playlist_size and \
+			self._playlist_entry_property_dict_resolver_count < MAX_NUMBER_OF_PLAYLIST_PROPERTY_DICT_RESOLVER_THREADS:
+			self._playlist_entry_property_dict_resolver_count = max(MIN_NUMBER_OF_PLAYLIST_PROPERTY_DICT_RESOLVER_THREADS,
+											min(MAX_NUMBER_OF_PLAYLIST_PROPERTY_DICT_RESOLVER_THREADS, playlist_size))
+			self._playlist_entry_property_dict_resolver_executor = ThreadPoolExecutor(
+				max_workers=self._playlist_entry_property_dict_resolver_count ,
+				thread_name_prefix=PLAYLIST_PROPERTY_DICT_RESOLVER_THREAD_PREFIX)
+
 	def _save_and_emit_playlist(self) -> None:
 		self._update_entry_links()
 		self._update_stati()
-		property_dicts = [playlist_entry.get_property_dict() for playlist_entry in self.playlist_entries]
-		save_and_emit(DbKey.PLAYLIST, SendEvent.PLAYLIST_CHANGED, property_dicts)
+		self._adjust_playlist_entry_property_dict_resolver_executor()
+		entries_with_futures = [(playlist_entry, self._playlist_entry_property_dict_resolver_executor.submit(playlist_entry.get_property_dict))
+								for playlist_entry in self.playlist_entries]
+		# don't wait longer than until first exception occurs. In case of an exception _save_and_emit_playlist(...) will be executed again anyways.
+		wait([entry_with_future[1] for entry_with_future in entries_with_futures], timeout=MAX_PLAYLIST_PROPERTY_DICT_RESOLUTION_WAIT_TIME_IN_SECS,
+			 return_when=FIRST_EXCEPTION)
+		property_dicts = []
+		unresolved_entry = None
+		for entry_with_future in entries_with_futures:
+			try:
+				property_dicts.append(entry_with_future[1].result(timeout=0)) # we waited already
+			except (CancelledError, TimeoutError) as err:
+				logger.warning('Resolving playlist entry failed due to timeout or cancellation.', exc_info=True)
+			except Exception as err:
+				logger.exception('Exception on attempt to resolve playlist entry. Playlist entry \'%s\' will be deleted.',
+								 exc_info=True)
+				unresolved_entry = entry_with_future[0]
+				break
+		if unresolved_entry:
+			# this initiates a new update/save/emit cycle
+			self.delete_track(str(unresolved_entry.playlist_entry_id))
+		else:
+			# we need to ensure that save_and_emit(...) is only called if no exception occurred.
+			# instead of testing truthy of unresolved_entry we could also add a flag and call delete_track(...)
+			# before breaking the loop.
+			save_and_emit(DbKey.PLAYLIST, SendEvent.PLAYLIST_CHANGED, property_dicts)

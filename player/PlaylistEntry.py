@@ -102,7 +102,7 @@ class PlaylistEntry:
 		return 'PLaylist entry for track: {} (status: {}, id: {})'\
 			.format(self.track, self._playlist_entry_status, self.playlist_entry_id)
 
-	def get_property_dict(self) -> {}:
+	def get_property_dict(self) -> Dict:
 		return {ID: str(self.playlist_entry_id),
 				TRACK: self.track.get_property_dict(),
 				STATUS: self._playlist_entry_status.value}
@@ -115,13 +115,13 @@ class PlaylistEntryFactory:
 	def create_playlist_entry_from_youtube_url(self, url: str) -> PlaylistEntry:
 		return PlaylistEntry(self._track_factory.create_youtube_track(url), PlaylistEntryStatus.WAITING, uuid.uuid4())
 
-	def playlist_entries_from_props_list(self, playlist_entry_dicts: []) -> [PlaylistEntry]:
-		executor = ThreadPoolExecutor(max_workers=100, thread_name_prefix='PlayListLoaderThread')
+	def playlist_entries_from_props_list(self, playlist_entry_dicts: List) -> List[PlaylistEntry]:
+		executor = ThreadPoolExecutor(max_workers=100, thread_name_prefix='PlaylistLoaderThread')
 		futures = [executor.submit(self._load_playlist_entry_from_property_dict, playlist_entry_dict) for playlist_entry_dict in playlist_entry_dicts]
 		executor.shutdown()
 		return [future.result() for future in futures]
 
-	def _load_playlist_entry_from_property_dict(self, playlist_entry_dict: {}) -> PlaylistEntry:
+	def _load_playlist_entry_from_property_dict(self, playlist_entry_dict: Dict) -> PlaylistEntry:
 		track_dict = playlist_entry_dict[TRACK]
 		track = self._track_factory.track_from_dict(track_dict)
 		return PlaylistEntry(track, PlaylistEntryStatus(playlist_entry_dict[STATUS]), UUID(playlist_entry_dict[ID]))
