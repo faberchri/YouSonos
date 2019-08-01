@@ -3,7 +3,6 @@ import classNames from 'classnames';
 import {
     CurrentPlayerState,
     playerState,
-    playlistChanged,
     PlaylistItem,
     playNextTrack,
     playPreviousTrack,
@@ -19,9 +18,7 @@ import Next from '@material-ui/icons/SkipNextRounded';
 import Grid from '@material-ui/core/Grid';
 
 interface State {
-    playPreviousButtonDisabled: boolean;
     playButtonDisabled: boolean;
-    playNextButtonDisabled: boolean;
     icon: JSX.Element;
 }
 
@@ -45,7 +42,9 @@ const styles = (theme: Theme) => createStyles({
     },
 });
 
-interface Props extends WithStyles<typeof styles> {}
+interface Props extends WithStyles<typeof styles> {
+    playlistItems: PlaylistItem[]
+}
 
 class PlayPauseControl extends React.Component<Props, State> {
 
@@ -53,12 +52,10 @@ class PlayPauseControl extends React.Component<Props, State> {
         super(props);
         this.state = PlayPauseControl.getInitialPlayPauseControl();
         this.setCurrentTrack = this.setCurrentTrack.bind(this);
-        this.setSideButtonActivity = this.setSideButtonActivity.bind(this);
     }
 
     componentDidMount() {
         playerState(this.setCurrentTrack);
-        playlistChanged(this.setSideButtonActivity)
     }
 
     setCurrentTrack(currentPlayerState: CurrentPlayerState): void {
@@ -68,17 +65,13 @@ class PlayPauseControl extends React.Component<Props, State> {
             return;
         } else if (playerState === 'PAUSED') {
             this.setState( {
-                playPreviousButtonDisabled: this.state.playPreviousButtonDisabled,
                 playButtonDisabled: false,
-                playNextButtonDisabled: this.state.playNextButtonDisabled,
                 icon: <PlayArrow />
             });
             return;
         } else if (playerState === 'PLAYING') {
             this.setState( {
-                playPreviousButtonDisabled: this.state.playPreviousButtonDisabled,
                 playButtonDisabled: false,
-                playNextButtonDisabled: this.state.playNextButtonDisabled,
                 icon: <Pause />,
             });
             return;
@@ -86,23 +79,19 @@ class PlayPauseControl extends React.Component<Props, State> {
         throw new Error('Illegal player state received: ' + playerState);
     }
 
-    setSideButtonActivity(playlistItems: PlaylistItem[]): void {
-        const indexOfCurrent = playlistItems.findIndex(playlistItem => playlistItem.status === 'CURRENT');
+    getSideButtonActivity = () => {
+        const indexOfCurrent = this.props.playlistItems.findIndex(playlistItem => playlistItem.status === 'CURRENT');
         const hasCurrentItem = indexOfCurrent >= 0;
-        const isCurrentItemNotLast = hasCurrentItem && indexOfCurrent < playlistItems.length - 1;
-        this.setState({
+        const isCurrentItemNotLast = hasCurrentItem && indexOfCurrent < this.props.playlistItems.length - 1;
+        return {
             playPreviousButtonDisabled: !hasCurrentItem,
-            playButtonDisabled: this.state.playButtonDisabled,
             playNextButtonDisabled: !isCurrentItemNotLast,
-            icon: this.state.icon
-        });
-    }
+        };
+    };
 
     static getInitialPlayPauseControl(): State {
         return {
-            playPreviousButtonDisabled: true,
             playButtonDisabled: true,
-            playNextButtonDisabled: true,
             icon: <PlayArrow fontSize="large"/>
         };
     }
@@ -110,6 +99,8 @@ class PlayPauseControl extends React.Component<Props, State> {
     render() {
 
         const { classes } = this.props;
+
+        const sideButtonActivity = this.getSideButtonActivity();
 
         return (
 
@@ -127,7 +118,7 @@ class PlayPauseControl extends React.Component<Props, State> {
                                 color="primary"
                                 aria-label="Previous"
                                 className={classNames(classes.button, classes.leftButton)}
-                                disabled={this.state.playPreviousButtonDisabled}
+                                disabled={sideButtonActivity.playPreviousButtonDisabled}
                                 onClick={playPreviousTrack}
                                 size="small"
                         >
@@ -154,7 +145,7 @@ class PlayPauseControl extends React.Component<Props, State> {
                                 color="primary"
                                 aria-label="Next"
                                 className={classNames(classes.button, classes.rightButton)}
-                                disabled={this.state.playNextButtonDisabled}
+                                disabled={sideButtonActivity.playNextButtonDisabled}
                                 onClick={playNextTrack}
                                 size="small"
                         >

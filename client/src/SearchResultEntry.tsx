@@ -1,11 +1,8 @@
 import React from "react";
-import {addTrackToPlaylist, playTrack, togglePlayPause, Track} from "./api";
+import {playTrack, togglePlayPause, Track} from "./api";
 import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/styles";
-import IconButton from '@material-ui/core/IconButton';
-
-import Add from '@material-ui/icons/PlaylistAddRounded';
-import AddCheck from '@material-ui/icons/PlaylistAddCheckRounded';
 import TrackListEntry from "./TrackListEntry";
+import AddToPlaylistButton from "./AddToPlaylistButton";
 
 
 interface State {
@@ -17,7 +14,6 @@ interface Props extends WithStyles<typeof styles> {
     key: number;
     currentTrack: Track;
     searchResultTrack: Track;
-    playlistTrackUrls: ReadonlySet<string>;
 }
 
 class SearchResultEntry extends React.Component<Props, State> {
@@ -41,12 +37,7 @@ class SearchResultEntry extends React.Component<Props, State> {
             showAsCurrent={showAsCurrent}
             showAsPlaying={showAsPlaying}
             playPauseCallback={playPauseCallback}
-            rightIcon={
-                <IconButton color="primary" onClick={() => addTrackToPlaylist(searchResultTrack.url)}>
-                    {this.props.playlistTrackUrls.has(searchResultTrack.url) ?
-                        <AddCheck fontSize="small"/> : <Add fontSize="small"/>}
-                </IconButton>
-            }
+            rightIcon={ <AddToPlaylistButton track={searchResultTrack} /> }
         />
     }
 }

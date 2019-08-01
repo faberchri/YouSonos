@@ -8,6 +8,8 @@ import Typography from '@material-ui/core/Typography';
 import PlayPauseControl from "./PlayPauseControl";
 import Grid from '@material-ui/core/Grid';
 import TrackProgressControl from "./TrackProgressControl";
+import AddToPlaylistButton from "./AddToPlaylistButton";
+import {PlaylistContext} from "./Playlist";
 
 var Textfit = require('react-textfit').default;
 
@@ -39,6 +41,13 @@ const styles = (theme: Theme) => createStyles({
     artistText: {
         height: '16px',
         lineHeight: '1'
+    },
+    metaButtonContainer: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
+        height: '100%'
     }
 });
 
@@ -82,7 +91,11 @@ class CurrentTrackPanel extends React.Component<Props, State> {
                     className={classes.cover}
                     image={this.state.currentTrack.cover_url}
                     title={this.state.currentTrack.title}
-                />
+                >
+                    <div className={classes.metaButtonContainer}>
+                        <AddToPlaylistButton track={this.state.currentTrack} />
+                    </div>
+                </CardMedia>
                 <Grid container className={classes.gridContainer}>
                     <Grid item xs={12} >
                         <Typography component="h6" variant="h6" align={"left"} className={classes.titleText}>
@@ -99,7 +112,11 @@ class CurrentTrackPanel extends React.Component<Props, State> {
                         </Typography>
                     </Grid>
                     <Grid item xs={12}>
-                        <PlayPauseControl />
+                        <PlaylistContext.Consumer>
+                            {playlistContext => (
+                                <PlayPauseControl playlistItems={playlistContext.playlistItems}/>
+                            )}
+                        </PlaylistContext.Consumer>
                     </Grid>
                     <Grid item xs={12}>
                         <TrackProgressControl track={this.state.currentTrack}/>

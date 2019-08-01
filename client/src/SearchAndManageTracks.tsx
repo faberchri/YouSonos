@@ -6,10 +6,9 @@ import List from '@material-ui/icons/List';
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import Playlist from "./Playlist";
+import Playlist, {PlaylistContext} from "./Playlist";
 import Divider from '@material-ui/core/Divider';
 import Badge from '@material-ui/core/Badge';
-import {playlistChanged, PlaylistItem} from "./api";
 import SearchControl from "./SearchControl";
 
 
@@ -17,8 +16,7 @@ var SwipeableViews = require('react-swipeable-views').default;
 
 
 interface State {
-    index: number,
-    playlistSize: number,
+    index: number
 }
 
 const styles = (theme: Theme) => createStyles({
@@ -42,43 +40,30 @@ const styles = (theme: Theme) => createStyles({
     },
 });
 
-interface Props extends WithStyles<typeof styles> {}
+interface Props extends WithStyles<typeof styles> { }
 
 class SearchAndManageTracks extends React.Component<Props, State> {
 
 
     constructor(props: Props) {
         super(props);
-        this.setPlaylistSize = this.setPlaylistSize.bind(this);
 
         this.state = {
-            index: 0,
-            playlistSize: 0,
+            index: 0
         };
     }
 
     handleChange = (event: any, index: number) => {
-        this.setState({ index: index });
+        this.setState({index: index});
     };
-
-    componentDidMount() {
-        playlistChanged(this.setPlaylistSize);
-    }
-
-    setPlaylistSize(items: PlaylistItem[]) {
-        this.setState({
-            index: this.state.index,
-            playlistSize: items.length,
-        })
-    }
 
     render() {
 
-        const { classes } = this.props;
+        const {classes} = this.props;
 
         return (
             <Paper className={classes.paper}>
-                <AppBar position="static" color="default" className={classes.tabHeader} >
+                <AppBar position="static" color="default" className={classes.tabHeader}>
                     <Tabs
                         value={this.state.index}
                         onChange={this.handleChange}
@@ -86,25 +71,32 @@ class SearchAndManageTracks extends React.Component<Props, State> {
                         textColor="secondary"
                         variant={"fullWidth"}
                     >
-
-                        <Tab icon={<Search/>} />
-                        <Tab icon={<Badge badgeContent={this.state.playlistSize}><List/></Badge>} />
-
+                        <Tab icon={<Search/>}/>
+                        <Tab icon={
+                            <PlaylistContext.Consumer>
+                                {playlistContext => (
+                                    <Badge badgeContent={playlistContext.playlistItems.length}>
+                                        <List/>
+                                    </Badge>
+                                )}
+                            </PlaylistContext.Consumer>
+                        }/>
                     </Tabs>
                 </AppBar>
                 <Divider/>
                 <SwipeableViews
-                    disabled = {true}
+                    disabled={true}
                     index={this.state.index}
                     className={classes.slideContainer}
                     containerStyle={{width: '100%'}}
                     slideStyle={{display: 'flex', flexFlow: 'column', height: 'auto'}}
                 >
-                    <SearchControl />
-                    <Playlist />
+                    <SearchControl/>
+                    <Playlist/>
                 </SwipeableViews>
             </Paper>
         );
     }
 }
-export default withStyles(styles) (SearchAndManageTracks);
+
+export default withStyles(styles)(SearchAndManageTracks);

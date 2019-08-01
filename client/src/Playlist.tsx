@@ -5,6 +5,50 @@ import List from '@material-ui/core/List';
 import {arrayMove, SortableContainer, SortableElement, SortEnd, SortEvent} from 'react-sortable-hoc';
 import PlaylistEntry from "./PlaylistEntry";
 
+interface ContextState {
+    playlistItems: PlaylistItem[];
+    playlistTrackUrls: ReadonlySet<string>;
+}
+
+interface ContextProps {}
+
+const INITIAL_CONTEXT_STATE: ContextState = { playlistItems: [], playlistTrackUrls: new Set() };
+
+const PlaylistContext = React.createContext<ContextState>(INITIAL_CONTEXT_STATE);
+
+
+class PlaylistContextProvider extends React.Component<ContextProps,ContextState> {
+
+    constructor(props: ContextProps) {
+        super(props);
+        this.state = INITIAL_CONTEXT_STATE;
+    }
+
+    componentDidMount() {
+        playlistChanged(this.setPlaylist);
+    }
+
+    setPlaylist = (items: PlaylistItem[]) => {
+        this.setState({
+            playlistItems: items,
+            playlistTrackUrls: new Set(items.map(item => item.track.url)),
+        });
+    };
+
+    render() {
+        return (
+            <PlaylistContext.Provider value={ {
+                playlistItems: this.state.playlistItems,
+                playlistTrackUrls: this.state.playlistTrackUrls,
+            }}>
+                {this.props.children}
+            </PlaylistContext.Provider>
+        );
+    }
+}
+
+export {PlaylistContext, PlaylistContextProvider}
+
 interface State {
     playlistItems: PlaylistItem[];
 }

@@ -4,6 +4,7 @@ import {createStyles, Theme, WithStyles, withStyles} from '@material-ui/core/sty
 import SearchAndManageTracks from "./SearchAndManageTracks";
 import CurrentTrackCoverPanel from "./CurrentTrackPanel";
 import {initSocket} from "./api";
+import {PlaylistContextProvider} from "./Playlist";
 
 const styles = (theme: Theme) => createStyles({
 
@@ -32,10 +33,13 @@ class App extends Component<Props, {}> {
 
         return (
             <div className={classes.app}>
-                <CurrentTrackCoverPanel />
-                <DeviceControl/>
-                <SearchAndManageTracks/>
+                <PlaylistContextProvider>
+                    <CurrentTrackCoverPanel />
+                    <DeviceControl/>
+                    <SearchAndManageTracks/>
+                </PlaylistContextProvider>
             </div>
+
         );
     }
 }
