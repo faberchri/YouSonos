@@ -215,7 +215,7 @@ Fixed with 8b18f994b2a9cdab86d8293317b5872049f87970 .
 seek should be disabled for all other users until seek completed.
 * Display search results in coverflow style as shown in [this demo](https://react-swipeable-views.com/demos/demos/#coverflow).
 * Support for youtube mixes.
-* Support for 'add to home screen' in iOS and Android.
+* Support for 'add to home screen' in ~~iOS~~ (3742424180560db809ca943bbcd94f934411990a) and Android.
 * Support for additional input sources beside YouTube.
 * Support for other stream consumers beside Sonos.
 * Adding some tests would be nice.
