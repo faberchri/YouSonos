@@ -116,12 +116,21 @@ class PlaylistEntryFactory:
 		return PlaylistEntry(self._track_factory.create_youtube_track(url), PlaylistEntryStatus.WAITING, uuid.uuid4())
 
 	def playlist_entries_from_props_list(self, playlist_entry_dicts: List) -> List[PlaylistEntry]:
+		logger.info("Creating playlist entries from playlist entry dict: %s", playlist_entry_dicts)
 		executor = ThreadPoolExecutor(max_workers=100, thread_name_prefix='PlaylistLoaderThread')
-		futures = [executor.submit(self._load_playlist_entry_from_property_dict, playlist_entry_dict) for playlist_entry_dict in playlist_entry_dicts]
+		futures = [(playlist_entry_dict, executor.submit(self._load_playlist_entry_from_property_dict, playlist_entry_dict)) for playlist_entry_dict in playlist_entry_dicts]
 		executor.shutdown()
-		return [future.result() for future in futures]
+		playlist_entries = []
+		for future in futures:
+			try:
+				entry = future[1].result()
+				playlist_entries.append(entry)
+			except Exception:
+				logger.info("Resolving the following playlist entry dict failed: %s", future[0], exc_info=False)
+		return playlist_entries
 
 	def _load_playlist_entry_from_property_dict(self, playlist_entry_dict: Dict) -> PlaylistEntry:
+		logger.debug("Creating playlist entry from playlist entry dict: %s", playlist_entry_dict)
 		track_dict = playlist_entry_dict[TRACK]
 		track = self._track_factory.track_from_dict(track_dict)
 		return PlaylistEntry(track, PlaylistEntryStatus(playlist_entry_dict[STATUS]), UUID(playlist_entry_dict[ID]))
