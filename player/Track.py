@@ -119,7 +119,6 @@ class YouTubeTrack(Track):
 
 	def __init__(self, args: Namespace, player: Player, track_status: TrackStatus, url: str, pafy: BasePafy):
 		super().__init__(args, player, track_status)
-		self._pafy_initialized = False
 		self._url = url
 		self._pafy: BasePafy = pafy
 		self._expiration_timestamp = self._get_new_expiration_date()
@@ -144,6 +143,11 @@ class YouTubeTrack(Track):
 			self._expiration_timestamp = self._get_new_expiration_date()
 			logger.info('Resolved youtube video (expires at: %s): %s', self._expiration_timestamp.isoformat(), self._pafy)
 		return self._pafy
+
+	def __str__(self) -> str:
+		if not self._pafy:
+			return '<uninitialized track with URL or ID {}>'.format(self._url)
+		return super().__str__()
 
 	def get_title(self) -> str:
 		return self._determine_artist_and_title()[1]
