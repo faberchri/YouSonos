@@ -44,7 +44,7 @@ class SearchInputField extends React.Component<Props, State> {
         };
 
         this.subject
-            .pipe(debounce(() => timer(500)))
+            .pipe(debounce(() => timer(750)))
             .subscribe((searchString) => {
                 this.props.onValueChange(searchString)
             });
