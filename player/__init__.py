@@ -89,7 +89,7 @@ def initialize(args: Namespace):
 	playlist = Playlist(playlist_entry_factory)
 	player.add_terminal_observer(playlist)
 	PlayerEventsConsumer(args, sonos_environment, player, track_factory, playlist).start()
-	search_service = SearchService(track_factory, args.youtube_api_key)
+	search_service = SearchService(track_factory, args.youtube_api_key, args.max_keyword_search_results)
 	SearchEventConsumer(args, search_service).start()
 	playlist.read_playlist_from_db()
 

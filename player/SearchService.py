@@ -83,12 +83,15 @@ class PlaylistSearchStrategy(UrlBasedSearchStrategy):
 
 class KeywordSearchResultIterator(SearchResult, Iterator[Track]):
 
-	def __init__(self, track_factory: TrackFactory, youtube_api: Resource, search_term: str) -> None:
+	def __init__(self, track_factory: TrackFactory, youtube_api: Resource, search_term: str,
+				 max_keyword_search_results: int) -> None:
 		self._track_factory = track_factory
 		self._youtube_api = youtube_api
+		self._max_keyword_search_results = max_keyword_search_results
 		self._next_page_token = None
 		self._has_next_page = True
 		self._search_term = search_term
+		self._result_count = 0
 		self._video_ids = self._query_youtube_api()
 		self._result_count = len(self._video_ids)
 		self._index = 0
@@ -118,10 +121,14 @@ class KeywordSearchResultIterator(SearchResult, Iterator[Track]):
 		return next_video_id
 
 	def _query_youtube_api(self) -> List[str]:
+		max_results = min(10, self._max_keyword_search_results - self._result_count)
+		if max_results <= 0:
+			return []
+		logger.info(f"Querying YouTube API for \'{self._search_term}' (max results: {max_results})")
 		search_response = self._youtube_api.search().list(
 			q=self._search_term,
 			part='id',
-			maxResults=10,
+			maxResults=max_results,
 			type='video',
 			pageToken=self._next_page_token
 		).execute()
@@ -133,12 +140,14 @@ class KeywordSearchResultIterator(SearchResult, Iterator[Track]):
 
 class KeywordSearchStrategy(SearchStrategy):
 
-	def __init__(self, track_factory: TrackFactory, youtube_api: Resource) -> None:
+	def __init__(self, track_factory: TrackFactory, youtube_api: Resource, max_keyword_search_results: int) -> None:
 		self._track_factory = track_factory
 		self._youtube_api = youtube_api
+		self._max_keyword_search_results = max_keyword_search_results
 
 	def search(self, search_term: str) -> Iterator[Track]:
-		return KeywordSearchResultIterator(self._track_factory, self._youtube_api, search_term)
+		return KeywordSearchResultIterator(self._track_factory, self._youtube_api, search_term,
+										   self._max_keyword_search_results)
 
 
 class SearchResultTrack:
@@ -157,13 +166,14 @@ class SearchResultTrack:
 
 class SearchTask:
 
-	def __init__(self, search_term: str, sid: str, track_factory: TrackFactory, executor: Executor, youtube_api: Resource):
+	def __init__(self, search_term: str, sid: str, track_factory: TrackFactory, executor: Executor,
+				 youtube_api: Resource, max_keyword_search_results: int) -> None:
 		self._search_term = search_term
 		self._sid = sid
 		self._executor = executor
 		self._search_strategies = [PlaylistSearchStrategy(track_factory), TrackSearchStrategy(track_factory)]
 		if youtube_api:
-			self._search_strategies.append(KeywordSearchStrategy(track_factory, youtube_api))
+			self._search_strategies.append(KeywordSearchStrategy(track_factory, youtube_api, max_keyword_search_results))
 		# appending and extending a list is thread-safe according to
 		# https://stackoverflow.com/questions/6319207/are-lists-thread-safe and
 		# http://effbot.org/pyfaq/what-kinds-of-global-value-mutation-are-thread-safe.htm
@@ -297,9 +307,10 @@ class SearchTask:
 
 class SearchService:
 
-	def __init__(self, track_factory: TrackFactory, youtube_api_key: str):
+	def __init__(self, track_factory: TrackFactory, youtube_api_key: str, max_keyword_search_results: int):
 		self._track_factory = track_factory
 		self._youtube_api_key = youtube_api_key
+		self._max_keyword_search_results = max_keyword_search_results
 		self._executor = ThreadPoolExecutor(max_workers=NUMBER_OF_WORKERS, thread_name_prefix='SearchServiceThread')
 		self._search_tasks: Dict[str, SearchTask] = {}
 		self._youtube_api: Resource = None
@@ -319,7 +330,8 @@ class SearchService:
 		if not search_task or search_task.search_term != search_term:
 			if search_task:
 				search_task.cancel()
-			search_task = SearchTask(search_term, sid, self._track_factory, self._executor, self._youtube_api)
+			search_task = SearchTask(search_term, sid, self._track_factory, self._executor, self._youtube_api,
+									 self._max_keyword_search_results)
 			search_task.start(batch_index, requested_search_indices)
 			self._search_tasks[sid] = search_task
 		else:

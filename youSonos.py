@@ -61,6 +61,10 @@ def parse_args() -> Namespace:
 														'\nSee also option \'' + out_stream_url + '\'.')
 	parser.add_argument('--redis_url', action='store', default=General.REDIS_URL, help='URL of the redis instance.\n'
 															'Defaults to:\n\t' + General.REDIS_URL)
+	parser.add_argument('--max-keyword-search-results', '-m', default=200, type=int, help='The max number of keyword search results '
+																				'to fetch from YouTube for a particular search term. '
+																				'Limiting the number of fetched search '
+																				'results helps saving YouTube API quota.')
 	return parser.parse_args()
 
 
