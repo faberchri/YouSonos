@@ -8,7 +8,7 @@ import redis
 from abc import ABC, abstractmethod
 from argparse import Namespace
 from flask_socketio import SocketIO
-from typing import Any, Dict, Callable, Iterable, Iterator, List, Set, ValuesView
+from typing import Any, Dict, Callable, Iterable, Iterator, List, Set, ValuesView, TypeVar, Union
 
 from Constants import *
 
@@ -16,6 +16,10 @@ _db = None
 _socket = None
 
 logger = logging.getLogger(PlayerLoggerName.UTIL.value)
+
+
+IntOrStr = Union[int, str]
+PropDict = Dict[str, IntOrStr]
 
 
 def save_in_db(key: DbKey, payload):

@@ -39,7 +39,7 @@ class Playlist(PlayerObserver):
 		self.on_current(init_player)
 		self._save_and_emit_playlist()
 
-	def on_current(self, callback: [Callable[[PlaylistEntry], None]]) -> None:
+	def on_current(self, callback: Callable[[PlaylistEntry], None]) -> None:
 		if self.playlist_entries:
 			current = next((entry for entry in self.playlist_entries if entry.is_current()), self.playlist_entries[0])
 			callback(current)
