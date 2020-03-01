@@ -2,7 +2,7 @@ import React from "react";
 import {Subject, timer} from "rxjs";
 import {debounce} from "rxjs/operators";
 import {Device, setVolume, volumeChanged} from "./api";
-import Slider from "@material-ui/lab/Slider/Slider";
+import Slider from "@material-ui/core/Slider/Slider";
 import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/styles";
 import Grid from '@material-ui/core/Grid';
 import VolumeDownRounded from '@material-ui/icons/VolumeDownRounded';
@@ -16,8 +16,6 @@ interface State {
 
 const styles = (theme: Theme) => createStyles({
     root: {
-    },
-    slider: {
     },
     // fix scrollbar issue.
     // See: https://github.com/mui-org/material-ui/issues/13649 and https://github.com/mui-org/material-ui/issues/13455
@@ -55,9 +53,10 @@ class VolumeControl extends React.Component<Props, State> {
             .subscribe((volume) => setVolume(this.props.device, volume));
     }
 
-    updateState (event: any, volume: number): void {
-        this.setState({currentVolume: volume});
-        this.subject.next(volume);
+    updateState (event: any, volume: number | number[]): void {
+        let newVolume = volume as number;
+        this.setState({currentVolume: newVolume});
+        this.subject.next(newVolume);
     };
 
     reduceVolume = (): void => {
@@ -96,7 +95,6 @@ class VolumeControl extends React.Component<Props, State> {
                 </Grid>
                 <Grid item xs={8} className={classNames(classes.verticalCentered, classes.sliderContainer)}>
                         {<Slider
-                            classes={{ container: classes.slider }}
                             max={this.props.device.max_volume}
                             value={currentVolume}
                             step={1}

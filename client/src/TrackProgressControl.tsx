@@ -6,7 +6,7 @@ import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/sty
 import Grid from "@material-ui/core/Grid/Grid";
 import Typography from "@material-ui/core/Typography";
 import IconButton from "@material-ui/core/IconButton";
-import Slider from "@material-ui/lab/Slider";
+import Slider from "@material-ui/core/Slider";
 import Replay10Icon from "@material-ui/icons/Replay10Rounded";
 import Forward10Icon from "@material-ui/icons/Forward10Rounded";
 import {formatDuration, playerTime, playerTimeUpdateActivation, seekTo, Track} from "./api";
@@ -21,8 +21,6 @@ interface State {
 
 const styles = (theme: Theme) => createStyles({
     root: {
-    },
-    slider: {
     },
     // fix scrollbar issue.
     // See: https://github.com/mui-org/material-ui/issues/13649 and https://github.com/mui-org/material-ui/issues/13455
@@ -105,8 +103,9 @@ class TrackProgressControl extends React.Component<Props, State> {
         this.enqueueSeekEvent(this.state.playerTime + 10 * 1000);
     };
 
-    changePosition = (event: any, new_time: number): void => {
-        this.enqueueSeekEvent(new_time);
+    changePosition = (event: any, value: number | number[]): void => {
+        let newTime = value as number;
+        this.enqueueSeekEvent(newTime);
     };
 
     getPlayerTimeString = (): string => {
@@ -117,12 +116,12 @@ class TrackProgressControl extends React.Component<Props, State> {
         return formatDuration(this.props.track.duration);
     };
 
-    private enqueueSeekEvent = (new_time: number): void => {
+    private enqueueSeekEvent = (newTime: number): void => {
         this.setState({
-            playerTime: new_time,
+            playerTime: newTime,
             playerTimeUpdateActive: false
         });
-        this.subject.next(new_time);
+        this.subject.next(newTime);
     };
 
     private activatePlayerTimeUpdate = (time: number): void => {
@@ -151,7 +150,6 @@ class TrackProgressControl extends React.Component<Props, State> {
                 </Grid>
                 <Grid item xs={10} className={classNames(classes.verticalCentered, classes.sliderContainer)}>
                     {<Slider
-                        classes={{ container: classes.slider }}
                         max={this.props.track.duration}
                         value={playerTime}
                         onChange={this.changePosition}
