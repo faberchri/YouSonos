@@ -36,7 +36,9 @@ RUN mkdir $CLIENT_DIR_NAME \
 COPY . ./
 
 # build the react app
+# set GENERATE_SOURCEMAP=false to prevent out of memory execption when building on Raspberry Pi
 RUN cd $CLIENT_DIR_NAME \
+	&& export GENERATE_SOURCEMAP=false \
 	&& npm run build
 
 ENTRYPOINT ["python", "youSonos.py"]
