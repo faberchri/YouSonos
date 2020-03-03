@@ -25,7 +25,6 @@ class App extends Component<Props, {}> {
 
     constructor(props: Props) {
         super(props);
-        initSocket();
     }
 
     render() {
@@ -41,6 +40,12 @@ class App extends Component<Props, {}> {
             </div>
 
         );
+    }
+
+    componentDidMount(): void {
+        // componentDidMount of all child components is called before
+        // see: https://stackoverflow.com/questions/48323746/order-of-componentdidmount-in-react-components-hierarchy
+        initSocket();
     }
 }
 
