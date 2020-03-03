@@ -7,6 +7,15 @@ ARG CLIENT_DIR_NAME
 # For the installation of some npm dependencies (e.g. node-gyp) a python version is required.
 RUN apk --no-cache add g++ gcc libgcc libstdc++ linux-headers make python
 
+# With the currently installed npm version (6.12.1) we run in the following error
+#
+# 	npm ERR! cb() never called!
+# 	npm ERR! This is an error with npm itself. Please report this error at:
+# 	npm ERR!     <https://npm.community>
+#
+# Therefore, we have to update npm first.
+RUN npm install -g npm
+
 # copy package.json and install all client app build dependencies
 COPY $CLIENT_DIR_NAME/package*.json ./
 RUN npm ci --only=production
