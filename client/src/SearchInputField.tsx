@@ -74,11 +74,11 @@ class SearchInputField extends React.Component<Props, State> {
         if (this.props.indicateSearchRunning) {
             textFieldAction =
                 <div>
-                    <CircularProgress size={46} className={classes.circularProgress} />
                     <IconButton
                         aria-label="clear input"
                         onClick={this.onReset}>
-                            <Clear/>
+                        <CircularProgress size={35} className={classes.circularProgress} />
+                        <Clear/>
                     </IconButton>
                 </div>
         } else {
