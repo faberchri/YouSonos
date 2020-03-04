@@ -75,7 +75,7 @@ class SearchAndManageTracks extends React.Component<Props, State> {
                         <Tab icon={
                             <PlaylistContext.Consumer>
                                 {playlistContext => (
-                                    <Badge badgeContent={playlistContext.playlistItems.length}>
+                                    <Badge badgeContent={playlistContext.playlistItems.length} showZero>
                                         <List/>
                                     </Badge>
                                 )}
