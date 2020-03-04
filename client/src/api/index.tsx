@@ -1,8 +1,8 @@
-import openSocket from 'socket.io-client';
 import * as moment from 'moment';
+import io from 'socket.io-client';
 import 'moment-duration-format';
 
-let socket: any;
+let socket: SocketIOClient.Socket;
 const albumIcon: string = require('../static/album_grey_192x192.png');
 
 function initSocket() {
@@ -12,7 +12,12 @@ function initSocket() {
         port = '5000';
     }
     const apiUrl = window.location.protocol + '//' + window.location.hostname + (port ? ':' + port : '');
-    socket = openSocket(apiUrl);
+    socket = io(apiUrl, {autoConnect: false});
+}
+
+function connectSocket() {
+    console.log('Connecting to socket at ', socket.io.uri);
+    socket.connect()
 }
 
 export type TrackType =
@@ -222,6 +227,7 @@ function formatDuration(durationInMilliseconds: number): string {
 
 export {
     initSocket,
+    connectSocket,
     NULL_TRACK,
     sonosSetup,
     volumeChanged,

@@ -3,7 +3,7 @@ import DeviceControl from './DeviceControl'
 import {createStyles, Theme, WithStyles, withStyles} from '@material-ui/core/styles';
 import SearchAndManageTracks from "./SearchAndManageTracks";
 import CurrentTrackCoverPanel from "./CurrentTrackPanel";
-import {initSocket} from "./api";
+import {initSocket, connectSocket} from "./api";
 import {PlaylistContextProvider} from "./Playlist";
 
 const styles = (theme: Theme) => createStyles({
@@ -25,6 +25,7 @@ class App extends Component<Props, {}> {
 
     constructor(props: Props) {
         super(props);
+        initSocket();
     }
 
     render() {
@@ -45,7 +46,7 @@ class App extends Component<Props, {}> {
     componentDidMount(): void {
         // componentDidMount of all child components is called before
         // see: https://stackoverflow.com/questions/48323746/order-of-componentdidmount-in-react-components-hierarchy
-        initSocket();
+        connectSocket();
     }
 }
 
