@@ -1,25 +1,32 @@
 import React from "react";
-import {changePlaylistTrackPosition, playlistChanged, PlaylistItem} from "./api";
+import {changePlaylistTrackPosition, deleteTrackFromPlaylist, playlistChanged, PlaylistItem} from "./api";
 import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/styles";
 import List from '@material-ui/core/List';
 import {arrayMove, SortableContainer, SortableElement, SortEnd, SortEvent} from 'react-sortable-hoc';
 import PlaylistEntry from "./PlaylistEntry";
 
-interface ContextState {
+interface PlaylistContextState {
     playlistItems: PlaylistItem[];
     playlistTrackUrls: ReadonlySet<string>;
+    onSortEnd(sort: SortEnd, event: SortEvent): void;
+    onDelete(playlistEntryId: string): void;
 }
 
-interface ContextProps {}
+interface PlaylistContextProps {}
 
-const INITIAL_CONTEXT_STATE: ContextState = { playlistItems: [], playlistTrackUrls: new Set() };
+const INITIAL_CONTEXT_STATE: PlaylistContextState = { 
+    playlistItems: [], 
+    playlistTrackUrls: new Set(),
+    onSortEnd(sort: SortEnd, event: SortEvent) { },
+    onDelete(playlistEntryId: string) {},
+};
 
-const PlaylistContext = React.createContext<ContextState>(INITIAL_CONTEXT_STATE);
+const PlaylistContext = React.createContext<PlaylistContextState>(INITIAL_CONTEXT_STATE);
 
 
-class PlaylistContextProvider extends React.Component<ContextProps,ContextState> {
+class PlaylistContextProvider extends React.Component<PlaylistContextProps, PlaylistContextState> {
 
-    constructor(props: ContextProps) {
+    constructor(props: PlaylistContextProps) {
         super(props);
         this.state = INITIAL_CONTEXT_STATE;
     }
@@ -28,10 +35,26 @@ class PlaylistContextProvider extends React.Component<ContextProps,ContextState>
         playlistChanged(this.setPlaylist);
     }
 
+    onSortEnd = (sort: SortEnd, event: SortEvent) => {
+        const movedEntry = this.state.playlistItems[sort.oldIndex];
+        const playlistItems = arrayMove(this.state.playlistItems, sort.oldIndex, sort.newIndex);
+        this.setPlaylist(playlistItems);
+        changePlaylistTrackPosition(movedEntry.playlist_entry_id, sort.newIndex)
+    };
+
+    onDelete = (playlistEntryId: string) => {
+        const playlistItems = this.state.playlistItems.filter(item => item.playlist_entry_id !== playlistEntryId);
+        this.setPlaylist(playlistItems);
+        deleteTrackFromPlaylist(playlistEntryId);
+
+    };
+
     setPlaylist = (items: PlaylistItem[]) => {
         this.setState({
             playlistItems: items,
             playlistTrackUrls: new Set(items.map(item => item.track.url)),
+            onSortEnd: this.onSortEnd,
+            onDelete: this.onDelete,
         });
     };
 
@@ -40,6 +63,8 @@ class PlaylistContextProvider extends React.Component<ContextProps,ContextState>
             <PlaylistContext.Provider value={ {
                 playlistItems: this.state.playlistItems,
                 playlistTrackUrls: this.state.playlistTrackUrls,
+                onSortEnd: this.state.onSortEnd,
+                onDelete: this.state.onDelete,
             }}>
                 {this.props.children}
             </PlaylistContext.Provider>
@@ -49,21 +74,19 @@ class PlaylistContextProvider extends React.Component<ContextProps,ContextState>
 
 export {PlaylistContext, PlaylistContextProvider}
 
-interface State {
-    playlistItems: PlaylistItem[];
-}
-
 const styles = (theme: Theme) => createStyles({
     list: {
         overflow: 'auto'
     }
 });
 
-interface Props extends WithStyles<typeof styles> {}
+interface PlaylistState { }
 
-const SortableItem = SortableElement(({playlistItem, playlistIndex}: {playlistItem: PlaylistItem, playlistIndex: number}) =>{
+interface PlaylistProps extends WithStyles<typeof styles> { }
+
+const SortableItem = SortableElement(({playlistItem}: {playlistItem: PlaylistItem}) =>{
     return(
-        <PlaylistEntry playlistItem={playlistItem} playlistIndex={playlistIndex}/>
+        <PlaylistEntry playlistItem={playlistItem} />
     );
 });
 
@@ -72,48 +95,28 @@ const SortableList = SortableContainer(({playlistItems, classNames}: {playlistIt
 
         <List dense className={classNames}>
             {playlistItems.map((value, index) => (
-                <SortableItem key={`item-${index}`} index={index} playlistItem={value} playlistIndex={index} />
+                <SortableItem key={`item-${index}`} index={index} playlistItem={value} />
             ))}
         </List>
 
     );
 });
 
-class Playlist extends React.Component<Props, State> {
-
-    constructor(props: Props) {
-        super(props);
-        this.setPlaylist = this.setPlaylist.bind(this);
-        this.onSortEnd = this.onSortEnd.bind(this);
-
-        this.state = {playlistItems: []};
-    }
-
-    componentDidMount() {
-        playlistChanged(this.setPlaylist)
-    }
-
-    setPlaylist(data: PlaylistItem[]) {
-        this.setState({playlistItems: data });
-    }
-
-    onSortEnd (sort: SortEnd, event: SortEvent){
-        const movedEntry = this.state.playlistItems[sort.oldIndex];
-        this.setState({
-            playlistItems: arrayMove(this.state.playlistItems, sort.oldIndex, sort.newIndex),
-        });
-        changePlaylistTrackPosition(movedEntry.playlist_entry_id, sort.newIndex)
-    };
+class Playlist extends React.Component<PlaylistProps, PlaylistState> {
 
     render() {
         const { classes } = this.props;
 
         return (
-            <SortableList playlistItems={this.state.playlistItems}
-                          classNames={classes.list}
-                          onSortEnd={this.onSortEnd}
-                          useDragHandle={true}
-                          lockAxis={'y'} />
+            <PlaylistContext.Consumer>
+                {playlistContext => (
+                <SortableList playlistItems={playlistContext.playlistItems}
+                            classNames={classes.list}
+                            onSortEnd={playlistContext.onSortEnd}
+                            useDragHandle={true}
+                            lockAxis={'y'} />
+            )}
+            </PlaylistContext.Consumer>
         );
     }
 }
