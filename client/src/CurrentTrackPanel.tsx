@@ -2,14 +2,13 @@ import React from "react";
 import {currentTrack, NULL_TRACK, Track} from "./api";
 
 import {createStyles, Theme, WithStyles, withStyles} from "@material-ui/core/styles";
-import Card from '@material-ui/core/Card';
-import CardMedia from '@material-ui/core/CardMedia';
 import Typography from '@material-ui/core/Typography';
 import PlayPauseControl from "./PlayPauseControl";
 import Grid from '@material-ui/core/Grid';
 import TrackProgressControl from "./TrackProgressControl";
 import AddToPlaylistButton from "./AddToPlaylistButton";
 import {PlaylistContext} from "./Playlist";
+import { Paper } from "@material-ui/core";
 
 var Textfit = require('react-textfit').default;
 
@@ -19,20 +18,33 @@ interface State {
 }
 
 const styles = (theme: Theme) => createStyles({
-    card: {
-        display: 'flex',
+    paper: {
         margin: '5px',
-        height: '300px'
+        minHeight: '138px',
+        maxHeight: '200px',
+        flexGrow: 1,
+        flexShrink: 0.4,
+        overflow: "hidden",
     },
-    cover: {
+    outerGridContainer: {
+        width: '100%',
+        height: '100%',
+    },
+    coverImageGridItem: {
+        height: '100%',
+        backgroundSize: "contain",
         backgroundColor: 'black',
-        width: '150px',
-        minWidth: '150px',
-        maxWidth: '150px'
+        display: "flex",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
     },
-    gridContainer: {
+    controlPanelGridItem: {
+        height: '100%',
+        paddingLeft: '5px',
+    },
+    controlPanelGridContainer: {
         padding: '5px',
-        width: 'calc(100% - 150px)',
+        height: '100%',
     },
     titleText: {
         height: '25px',
@@ -54,7 +66,6 @@ const styles = (theme: Theme) => createStyles({
 interface Props extends WithStyles<typeof styles> {}
 
 class CurrentTrackPanel extends React.Component<Props, State> {
-
 
     constructor(props: Props) {
         super(props);
@@ -78,53 +89,46 @@ class CurrentTrackPanel extends React.Component<Props, State> {
         return {currentTrack: NULL_TRACK};
     }
 
-
     render() {
-
         const { classes } = this.props;
-
-
         return (
-
-            <Card className={classes.card}>
-                <CardMedia
-                    className={classes.cover}
-                    image={this.state.currentTrack.cover_url}
-                    title={this.state.currentTrack.title}
-                >
-                    <div className={classes.metaButtonContainer}>
-                        <AddToPlaylistButton track={this.state.currentTrack} />
-                    </div>
-                </CardMedia>
-                <Grid container className={classes.gridContainer}>
-                    <Grid item xs={12} >
-                        <Typography component="h6" variant="h6" align={"left"} className={classes.titleText}>
-                            <Textfit mode="single" max={25} >
-                            {this.state.currentTrack.title}
-                            </Textfit>
-                        </Typography>
+            <Paper className={classes.paper}>
+                <Grid container direction="row" justify="space-evenly" alignItems="center" className={classes.outerGridContainer}>
+                    <Grid item xs={4} className={classes.coverImageGridItem} style={{ backgroundImage: `url(${this.state.currentTrack.cover_url})` }} >
+                        <div className={classes.metaButtonContainer}>
+                            <AddToPlaylistButton track={this.state.currentTrack} />
+                        </div>
                     </Grid>
-                    <Grid item xs={12} >
-                        <Typography variant="subtitle1" color="textSecondary" align={"left"} className={classes.artistText}>
-                            <Textfit mode="single" max={16} >
-                                {this.state.currentTrack.artist}
-                            </Textfit>
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <PlaylistContext.Consumer>
-                            {playlistContext => (
-                                <PlayPauseControl playlistItems={playlistContext.playlistItems}/>
-                            )}
-                        </PlaylistContext.Consumer>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TrackProgressControl track={this.state.currentTrack}/>
+                    <Grid item xs={8} className={classes.controlPanelGridItem}>
+                        <Grid container className={classes.controlPanelGridContainer}>
+                            <Grid item xs={12} >
+                                <Typography component="h6" variant="h6" align={"left"} className={classes.titleText}>
+                                    <Textfit mode="single" max={25} >
+                                    {this.state.currentTrack.title}
+                                    </Textfit>
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={12} >
+                                <Typography variant="subtitle1" color="textSecondary" align={"left"} className={classes.artistText}>
+                                    <Textfit mode="single" max={16} >
+                                        {this.state.currentTrack.artist}
+                                    </Textfit>
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <PlaylistContext.Consumer>
+                                    {playlistContext => (
+                                        <PlayPauseControl playlistItems={playlistContext.playlistItems}/>
+                                    )}
+                                </PlaylistContext.Consumer>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TrackProgressControl track={this.state.currentTrack}/>
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Grid>
-
-
-            </Card>
+            </Paper>
         );
     }
 }

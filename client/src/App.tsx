@@ -14,9 +14,6 @@ const styles = (theme: Theme) => createStyles({
         flexFlow: 'column',
         height: '100%',
     },
-    paper: {
-        margin: '5px',
-    }
 });
 
 interface Props extends WithStyles<typeof styles> {}

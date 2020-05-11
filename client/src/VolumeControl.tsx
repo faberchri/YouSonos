@@ -22,13 +22,20 @@ const styles = (theme: Theme) => createStyles({
     sliderContainer: {
         paddingLeft: '7px',
         paddingRight: '7px',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        overflowY: 'hidden',
     },
     verticalCentered: {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
     },
+    volumeButtonGridItem: {
+        alignItems: 'center',
+    },
+    volumeButton: {
+        width: '30px', // height is also 30px
+    }
 });
 
 interface Props extends WithStyles<typeof styles> {
@@ -88,8 +95,8 @@ class VolumeControl extends React.Component<Props, State> {
 
         return (
             <Grid container className={classes.root} >
-                <Grid item xs={2}>
-                    <IconButton onClick={this.reduceVolume} color="primary">
+                <Grid item xs={2} className={classNames(classes.verticalCentered, classes.volumeButtonGridItem)}>
+                    <IconButton onClick={this.reduceVolume} color="primary" size="small" className={classes.volumeButton}>
                         <VolumeDownRounded />
                     </IconButton>
                 </Grid>
@@ -101,8 +108,8 @@ class VolumeControl extends React.Component<Props, State> {
                             onChange={this.updateState}
                         />}
                 </Grid>
-                <Grid item xs={2}>
-                    <IconButton onClick={this.increaseVolume} color="primary">
+                <Grid item xs={2} className={classNames(classes.verticalCentered, classes.volumeButtonGridItem)}>
+                    <IconButton onClick={this.increaseVolume} color="primary" size="small" className={classes.volumeButton}>
                         <VolumeUpRounded />
                     </IconButton>
                 </Grid>

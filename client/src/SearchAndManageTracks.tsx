@@ -22,12 +22,14 @@ interface State {
 const styles = (theme: Theme) => createStyles({
 
     paper: {
+        minHeight: '150px',
         paddingLeft: '5px',
         paddingRight: '5px',
         margin: '5px',
-        height: '100%',
         display: 'flex',
         flexFlow: 'column',
+        flexGrow: 1,
+        flexShrink: 3,
     },
     tabHeader: {
         backgroundColor: 'inherit',
