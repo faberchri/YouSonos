@@ -20,26 +20,23 @@ interface State {
 const styles = (theme: Theme) => createStyles({
     paper: {
         margin: '5px',
-        minHeight: '138px',
-        maxHeight: '200px',
-        flexGrow: 1,
-        flexShrink: 0.4,
-        overflow: "hidden",
+        minHeight: '142px',
+        flex: 1.5,
+        display: 'flex',
+        overflow: 'hidden',
     },
     outerGridContainer: {
         width: '100%',
-        height: '100%',
+        display: 'flex',
+        flexDirection: 'row',
     },
     coverImageGridItem: {
-        height: '100%',
-        backgroundSize: "contain",
         backgroundColor: 'black',
-        display: "flex",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
     },
     controlPanelGridItem: {
-        height: '100%',
         paddingLeft: '5px',
     },
     controlPanelGridContainer: {
@@ -93,7 +90,7 @@ class CurrentTrackPanel extends React.Component<Props, State> {
         const { classes } = this.props;
         return (
             <Paper className={classes.paper}>
-                <Grid container direction="row" justify="space-evenly" alignItems="center" className={classes.outerGridContainer}>
+                <Grid container className={classes.outerGridContainer}>
                     <Grid item xs={4} className={classes.coverImageGridItem} style={{ backgroundImage: `url(${this.state.currentTrack.cover_url})` }} >
                         <div className={classes.metaButtonContainer}>
                             <AddToPlaylistButton track={this.state.currentTrack} />

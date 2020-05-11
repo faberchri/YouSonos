@@ -25,6 +25,15 @@ const styles = (theme: Theme) => createStyles({
         overflowX: 'hidden',
         overflowY: 'hidden',
     },
+    slider: {
+        paddingTop: '13px',
+        paddingBottom: '13px',
+        // on phones (device with limited accuracy pointing device) 
+        // padding was automatically increased to 20px, we don't want that.
+        '@media (pointer: coarse)': {
+            padding: '13px 0 !important',
+        },
+    },
     verticalCentered: {
         display: 'flex',
         flexDirection: 'column',
@@ -106,6 +115,7 @@ class VolumeControl extends React.Component<Props, State> {
                             value={currentVolume}
                             step={1}
                             onChange={this.updateState}
+                            className={classes.slider}
                         />}
                 </Grid>
                 <Grid item xs={2} className={classNames(classes.verticalCentered, classes.volumeButtonGridItem)}>

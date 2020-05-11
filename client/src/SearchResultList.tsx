@@ -15,7 +15,9 @@ interface State {
 
 const styles = (theme: Theme) => createStyles({
     list: {
-        overflowY: 'auto'
+        overflowY: 'auto',
+        paddingTop: '0px',
+        paddingBottom: '0px',
     },
 });
 

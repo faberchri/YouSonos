@@ -20,15 +20,24 @@ const styles = (theme: Theme) => createStyles({
         paddingTop: '5px',
         paddingBottom: '5px',
         minHeight: '30px', 
-        maxHeight: '90px',
         overflowY: 'auto',
         overflowX: 'hidden',
-        flexGrow: 1,
-        flexShrink: 0.4,
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 0.6,
     },
     gridContainer: {
-        flexGrow: 1,
-        height: '100%',
+        display: 'flex',
+        flex: 1,
+        width: '100%',
+    },
+    deviceGridItem: {
+        display: 'flex',
+        flex: '1 1 1',
+        width: '100%',
+    },
+    deviceGridContainer: {
+        display: 'flex',
         width: '100%',
     },
     label: {
@@ -66,10 +75,10 @@ class DeviceControl extends React.Component<Props, State> {
         const { classes } = this.props;
         return (
             <Paper className={classes.root}>
-                <Grid container direction="row" justify="space-evenly" alignItems="center" className={classes.gridContainer}>
+                <Grid container className={classes.gridContainer}>
                     {this.state.devices.map((item, index) => (
-                        <Grid item xs={12} key={item.device_name + index}>
-                            <Grid container>
+                        <Grid item xs={12} key={item.device_name + index} className={classes.deviceGridItem}>
+                            <Grid container className={classes.deviceGridContainer}>
                                 <Grid item xs={3} className={classes.verticalCentered}>
                                     <Typography variant={"body2"} className={classes.label}>{item.device_name}</Typography>
                                 </Grid>

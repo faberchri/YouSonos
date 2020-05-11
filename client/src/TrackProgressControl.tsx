@@ -40,7 +40,7 @@ const styles = (theme: Theme) => createStyles({
         justifyContent: 'center',
     },
     time: {
-        marginTop: '-20px'
+        marginTop: '-19px'
     },
     currentTime: {
         textAlign: 'left',

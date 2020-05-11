@@ -11,7 +11,7 @@ const styles = (theme: Theme) => createStyles({
     app: {
         textAlign: 'center',
         display: 'flex',
-        flexFlow: 'column',
+        flexDirection: 'column',
         height: '100%',
     },
 });

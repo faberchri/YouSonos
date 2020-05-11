@@ -22,14 +22,14 @@ interface State {
 const styles = (theme: Theme) => createStyles({
 
     paper: {
-        minHeight: '150px',
+        minHeight: '175px',
         paddingLeft: '5px',
         paddingRight: '5px',
         margin: '5px',
         display: 'flex',
         flexFlow: 'column',
-        flexGrow: 1,
-        flexShrink: 3,
+        flex: 3,
+        overflowY: 'auto',
     },
     tabHeader: {
         backgroundColor: 'inherit',
@@ -37,8 +37,8 @@ const styles = (theme: Theme) => createStyles({
     },
     slideContainer: {
         display: 'flex',
-        height: '100%',
         overflow: 'hidden',
+        flexGrow: 1,
     },
 });
 

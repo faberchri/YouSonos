@@ -76,7 +76,9 @@ export {PlaylistContext, PlaylistContextProvider}
 
 const styles = (theme: Theme) => createStyles({
     list: {
-        overflow: 'auto'
+        overflow: 'auto',
+        paddingTop: '0px',
+        paddingBottom: '0px',
     }
 });
 

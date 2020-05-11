@@ -17,10 +17,10 @@ interface State {
 
 const styles = (theme: Theme) => createStyles({
     textField: {
-        minHeight: '50px',
+        minHeight: '42px',
         width: '100%',
         marginTop: '12px',
-        marginBottom: '8px',
+        marginBottom: '0px',
     },
     circularProgress: {
         position: 'absolute'
