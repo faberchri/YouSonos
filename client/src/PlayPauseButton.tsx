@@ -16,6 +16,10 @@ const styles = (theme: Theme) => createStyles({
     },
     playPauseButton: {
         zIndex: 50
+    },
+    icon: {
+        backgroundColor: 'white',
+        borderRadius: '50%',
     }
 });
 
@@ -34,8 +38,8 @@ class PlayPauseButton extends React.Component<Props, {}> {
         const {classes} = this.props;
 
         const actionIcon = this.props.showAsPlaying ?
-            <Pause fontSize={"small"}/> :
-            <PlayArrow fontSize={"small"}/>;
+            <Pause fontSize={"small"} className={classes.icon}/> :
+            <PlayArrow fontSize={"small"} className={classes.icon}/>;
 
         return (
             <div>
