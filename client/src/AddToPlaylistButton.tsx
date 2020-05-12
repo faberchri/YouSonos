@@ -8,22 +8,37 @@ import AddCheck from '@material-ui/icons/PlaylistAddCheckRounded';
 import {PlaylistContext} from "./Playlist";
 
 
-const styles = (theme: Theme) => createStyles({});
+const styles = (theme: Theme) => createStyles({
+    icon: {
+        backgroundColor: 'white',
+        borderRadius: '10%',
+    }
+});
 
 interface Props extends WithStyles<typeof styles> {
     track: Track;
+    withBackground: boolean;
 }
 
 class AddToPlaylistButton extends React.Component<Props, {}> {
 
+    public static defaultProps = {
+        withBackground: false
+    };
+
     render() {
+        const {classes} = this.props;
+        let iconClasses = '';
+        if (this.props.withBackground) {
+            iconClasses = classes.icon;
+        }
         return (
             <PlaylistContext.Consumer>
                 {playlistContext => (
                     <IconButton color="primary" onClick={() => addTrackToPlaylist(this.props.track.url)}
                                 disabled={this.props.track.track_type === 'null'}>
                         {playlistContext.playlistTrackUrls.has(this.props.track.url) ?
-                            <AddCheck fontSize="small"/> : <Add fontSize="small"/>}
+                            <AddCheck fontSize="small" className={iconClasses}/> : <Add fontSize="small" className={iconClasses}/>}
                     </IconButton>
                 )}
             </PlaylistContext.Consumer>

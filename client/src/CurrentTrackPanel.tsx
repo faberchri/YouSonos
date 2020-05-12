@@ -93,7 +93,7 @@ class CurrentTrackPanel extends React.Component<Props, State> {
                 <Grid container className={classes.outerGridContainer}>
                     <Grid item xs={4} className={classes.coverImageGridItem} style={{ backgroundImage: `url(${this.state.currentTrack.cover_url})` }} >
                         <div className={classes.metaButtonContainer}>
-                            <AddToPlaylistButton track={this.state.currentTrack} />
+                            <AddToPlaylistButton track={this.state.currentTrack} withBackground={true}/>
                         </div>
                     </Grid>
                     <Grid item xs={8} className={classes.controlPanelGridItem}>
