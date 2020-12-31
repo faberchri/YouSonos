@@ -12,7 +12,8 @@ REACT_APP_LOCATION = 'client/build'
 PARENT_REACT_APP_LOCATION = '../' + REACT_APP_LOCATION
 
 socketio = SocketIO(logger=logging.getLogger(ServerLoggerName.SOCKETIO.value),
-					engineio_logger=logging.getLogger(ServerLoggerName.ENGINEIO.value))
+					engineio_logger=logging.getLogger(ServerLoggerName.ENGINEIO.value),
+					cors_allowed_origins='*')
 
 redis_db = None
 

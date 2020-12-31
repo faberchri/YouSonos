@@ -9,7 +9,7 @@ verify_ssl = true
 soco = "*"
 pafy = "*"
 youtube-dl = "*"
-flask-socketio = "*"
+flask-socketio = ">=4,<5"
 eventlet = "*"
 redis = "*"
 google-api-python-client = "*"
