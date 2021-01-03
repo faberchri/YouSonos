@@ -26,21 +26,38 @@ feature will be disabled and only YouTube URLs, YouTube video ids, or YouTube pl
 
 Prerequisites: Docker and docker-compose need to be installed.
 
-0. Clone this repo and `cd` into it.
+1. `git clone` this repo and `cd` into it.
 
-0. Build the docker image (this takes a while):
-    ```
-    docker-compose build
-    ```
-0. *(Optional)* Add a valid YouTube API key by fixing the following line in the file `docker-compose.yml`:
+1. Build or pull the docker images (this step takes a while):
+   - For the platforms `linux/amd64`, `linux/arm/v7`, and `linux/arm64` you can simply pull the matching yousonos
+     Docker image from [DockerHub](https://hub.docker.com/r/faberchri/yousonos) with:
+     ```
+     docker-compose down && docker-compose pull
+     ```
+     If you want to run YouSonos on a **Raspberry Pi**, pulling the image should be sufficient and there is probably no 
+     need to build the yousonos Docker image on the Pi from the source.
+   - If you want to run YouSonos on a platform for which no image is readily available from
+     [DockerHub](https://hub.docker.com/r/faberchri/yousonos) (`docker-compose pull` outputs 
+     `WARNING: Some service image(s) must be built from source`), you have to build the yousonos
+     Docker image from source with:
+     ```
+     docker-compose down && COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build
+     ```
+     This command requires a recent Docker version (>19.03) with the [buildx](https://docs.docker.com/buildx/working-with-buildx/) 
+     plugin enabled. Furthermore, if your docker-compose version is < 1.25.0 you can't use docker-compose for the
+     build, but you must call the Docker build command, i.e.:
+     ```
+     docker buildx build .
+     ```
+1. *(Optional)* Add a valid YouTube API key by fixing the following line in the file `docker-compose.yml`:
     ```
     command: ["--host", "0.0.0.0", "--port", "80", "--youtube-api-key", "<specify-your-YouTube-API-key-here>"]
     ```
-0. Start the YouSonos web server:
+1. Start the YouSonos web server together with the required dependencies (i.e.: redis) and observe the logs:
     ```
-    docker-compose up
+    docker-compose up --detach && docker-compose logs --follow
     ```
-0. Now you should see the YouSonos client app when browsing to http://localhost:80.
+1. Now you should see the YouSonos client app when browsing to http://localhost:80.
 
 ### Manual Setup
 (only tested for macOS)
@@ -48,28 +65,28 @@ Prerequisites: Docker and docker-compose need to be installed.
 Prerequisites: python 3.7, [pipenv](https://docs.pipenv.org), [npm](https://www.npmjs.com/get-npm), and 
 [VLC player](https://www.videolan.org/vlc/) need to be installed.
 
-0. Download, build and run Redis according to the [Redis Quick Start manual](https://redis.io/topics/quickstart) (requires `make`).
+1. Download, build and run Redis according to the [Redis Quick Start manual](https://redis.io/topics/quickstart) (requires `make`).
 
-0. Clone this repo and `cd` into it.
+1. Clone this repo and `cd` into it.
 
-0. Install all python dependencies with `pipenv`:
+1. Install all python dependencies with `pipenv`:
     ```
     pipenv install
     ```
-0. Install all javascript dependencies with `npm` (I guess using `yarn` would work too):
+1. Install all javascript dependencies with `npm` (I guess using `yarn` would work too):
     ```
     npm install
     ```
-0. Build the React web app with `npm`:
+1. Build the React web app with `npm`:
     ```
     npm run build
     ```
-0. Start the YouSonos web server by using `pipenv` (you could also first start a `pipenv shell` and then start the server
+1. Start the YouSonos web server by using `pipenv` (you could also first start a `pipenv shell` and then start the server
  with `python youSonos.py`):
     ```
     pipenv run python youSonos.py -v --youtube-api-key <your-YouTube-API-key-goes-here-if-you-own-one>
     ```
-0. Browse to http://127.0.0.1:5000 to see the YouSonos client app.
+1. Browse to http://127.0.0.1:5000 to see the YouSonos client app.
 Consider passing appropriate options to the server with `--host` (i.e. `0.0.0.0`) and `--port`.
 
 ## Setup on Raspberry Pi together with DNS Server
@@ -118,7 +135,7 @@ different image `coredns/coredns:coredns-arm` and additional option `--network=h
 ```
 docker run -d --name dns_server --restart=always --network=host --volume=/home/pi/containers/coredns/:/root/ coredns/coredns:coredns-arm -conf /root/Corefile
 ```
-Furthermore I had to alter the config of my network router to ..
+Furthermore, I had to alter the config of my network router to ...
 * ... make sure the router assigns always the same IP (`192.168.2.132`) to the Pi (based on the MAC address of the active 
 network interface of the Pi).
 * ... tell the router to use the IP of the Pi as the only DNS server.

@@ -1,0 +1,73 @@
+# from https://www.docker.com/blog/docker-github-actions/
+# and https://www.docker.com/blog/docker-v2-github-action-is-now-ga/
+# and https://github.com/marketplace/actions/docker-setup-buildx
+# and https://github.com/docker/setup-buildx-action
+name: Multiplatform Docker Image Build
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    -
+      name: Checkout
+      uses: actions/checkout@v2
+
+    -
+      name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+
+    -
+      name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v1
+
+    -
+      name: Available platforms
+      run: echo ${{ steps.buildx.outputs.platforms }}
+
+    -
+      name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    -
+      name: Login to DockerHub
+      uses: docker/login-action@v1 
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+    -
+      name: Create Docker image tag
+      run: echo "YOUSONOS_DOCKER_IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-8)_$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
+
+    -
+      name: Build the YouSonos Docker images and push to DockerHub
+      id: docker_build
+      uses: docker/build-push-action@v2
+      with:
+        context: ./
+        file: ./Dockerfile
+        # Other platforms for which the required docker base images are available: linux/arm/v6,linux/ppc64le,linux/s390x
+        # Adding additional platforms increases the build time considerably.
+        platforms: linux/amd64,linux/arm/v7,linux/arm64
+        push: true
+        tags: faberchri/yousonos:latest,faberchri/yousonos:${{ env.YOUSONOS_DOCKER_IMAGE_TAG }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
+
+    -
+      name: Print image digest
+      run: echo ${{ steps.docker_build.outputs.digest }}

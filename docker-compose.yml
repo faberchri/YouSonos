@@ -1,6 +1,19 @@
 version: '3'
 services:
     yousonos:
+        # Behaviour of docker-compose if both 'image' and 'build' are specified:
+        #
+        # According to https://github.com/compose-spec/compose-spec/blob/master/build.md#consistency-with-image :
+        # "Without any explicit user directives, Compose implementation with Build support 
+        # MUST first try to pull Image, then build from source if image was not found on registry."
+        #
+        # According to https://docs.docker.com/compose/compose-file/compose-file-v3/#image 
+        # and https://docs.docker.com/compose/compose-file/compose-file-v3/#build
+        # "If the image does not exist, Compose attempts to pull it, unless you have also specified
+        # build, in which case it builds it using the specified options and tags it with the specified tag."
+        # "If you specify image as well as build, then Compose names the built image with the webapp and
+        # optional tag specified in image"
+        image: faberchri/yousonos:latest
         build: .
         depends_on:
          - redis
