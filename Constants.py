@@ -53,6 +53,7 @@ class SendEvent(Enum):
 
 @unique
 class ReceiveEvent(Enum):
+	STOP = 'stop'
 	CONNECT = 'connect'
 	TOGGLE_PLAY_PAUSE = 'toggle_play_pause'
 	SET_VOLUME = 'set_volume'

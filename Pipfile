@@ -9,11 +9,11 @@ verify_ssl = true
 soco = "*"
 pafy = "*"
 youtube-dl = "*"
-flask-socketio = ">=4,<5"
+flask-socketio = "*"
 eventlet = "*"
 redis = "*"
 google-api-python-client = "*"
 python-vlc = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.9"

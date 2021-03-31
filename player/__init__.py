@@ -8,9 +8,11 @@ import redis
 from abc import ABC, abstractmethod
 from argparse import Namespace
 from flask_socketio import SocketIO
+from threading import Thread, Event
 from typing import Any, Dict, Callable, Iterable, Iterator, List, Set, ValuesView, TypeVar, Union
 
 from Constants import *
+from Util import StoppableThread
 
 _db = None
 _socket = None
@@ -77,7 +79,7 @@ from .EventConsumer import EventConsumer, PlayerEventsConsumer, SearchEventConsu
 from .SearchService import SearchService
 
 
-def initialize(args: Namespace):
+def initialize(args: Namespace) -> List[StoppableThread]:
 	global _db
 	_db = redis.from_url(args.redis_url)
 	global _socket
@@ -87,13 +89,17 @@ def initialize(args: Namespace):
 					   # FIXME probably meaningless arg
 					   log=logging.getLogger(PlayerLoggerName.EVENTLET.value))
 	sonos_environment = SonosEnvironment()
+	sonos_env_monitoring_thread = sonos_environment.start_sonos_environment_monitoring()
 	player = Player(args, sonos_environment)
 	track_factory = TrackFactory(args, player)
 	playlist_entry_factory = PlaylistEntryFactory(track_factory)
 	playlist = Playlist(playlist_entry_factory)
 	player.add_terminal_observer(playlist)
-	PlayerEventsConsumer(args, sonos_environment, player, track_factory, playlist).start()
+	player_events_consumer = PlayerEventsConsumer(args, sonos_environment, player, track_factory, playlist)
+	player_events_consumer.start()
 	search_service = SearchService(track_factory, args.youtube_api_key, args.max_keyword_search_results)
-	SearchEventConsumer(args, search_service).start()
+	search_event_consumer = SearchEventConsumer(args, search_service)
+	search_event_consumer.start()
 	playlist.read_playlist_from_db()
+	return [sonos_env_monitoring_thread, player_events_consumer, search_event_consumer]
 

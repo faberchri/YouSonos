@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
 import argparse
+import signal
 import multiprocessing as mp
 import time
-import urllib.request
+from urllib import request, error
 from argparse import Namespace
-from typing import NoReturn
+from typing import NoReturn, List, Callable
 
 import redis
 from redis.exceptions import ConnectionError
 
 from Constants import General, ServerLoggerName, PlayerLoggerName
+from Util import StoppableThread
 
 
 def init_logging(parsed_args: Namespace):
@@ -20,7 +22,7 @@ def init_logging(parsed_args: Namespace):
 		log_level = logging.INFO
 	if parsed_args.verbose > 1:
 		log_level = logging.DEBUG
-	logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+	logging.basicConfig(level=log_level, format='%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 	# prevent spamming of log on info level from engineio and socketio
 	if log_level == logging.INFO:
@@ -86,14 +88,24 @@ def wait_for_redis(logger) -> None:
 		i = i + 1
 
 
-def player_main(parsed_args: Namespace) -> None:
-	logging= init_logging(parsed_args)
+def get_exit_signal_handler(stoppable_threads: List[StoppableThread]) -> Callable[[], None]:
+
+	def on_signal(signum, frame):
+		for t in stoppable_threads:
+			t.stop()
+
+	return on_signal
+
+
+def player_main(parsed_args: Namespace) -> List[StoppableThread]:
+	logging = init_logging(parsed_args)
 	main_logger = logging.getLogger(PlayerLoggerName.MAIN.value)
 	main_logger.info('Starting youSonos player ...')
 	wait_for_redis(main_logger)
 	from player import initialize
-	initialize(parsed_args)
+	threads = initialize(parsed_args)
 	main_logger.info('youSonos player successfully started.')
+	return threads
 
 
 def server_main(parsed_args: Namespace) -> NoReturn:
@@ -114,17 +126,21 @@ def wait_for_server(parsed_args) -> None:
 	while True:
 		time.sleep(1)
 		try:
-			urllib.request.urlopen(url_with_port)
+			request.urlopen(url_with_port)
 			print("YouSonos started at: " + url_with_port)
 			break
-		except urllib.error.URLError:
+		except error.URLError:
 			pass
 
 
 if __name__ == '__main__':
 	mp.set_start_method('spawn')
 	parsed_args = parse_args()
-	player_main(parsed_args)
+	player_threads = player_main(parsed_args)
+	signal.signal(signal.SIGINT, get_exit_signal_handler(player_threads))
 	mp.Process(target=server_main, args=(parsed_args,)).start()
 	wait_for_server(parsed_args)
+	for pt in player_threads:
+		pt.join()
+	print("YouSonos terminated")
 

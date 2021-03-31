@@ -3,14 +3,15 @@ from __future__ import annotations
 import soco
 from soco.core import SoCo
 import threading
-import time
 
+from Util import StoppableThreadWithEvent, StoppableThread
 from . import *
 
 INITIAL_SONOS_VOLUME = 5
 SONOS_DISCOVERY_INTERVAL_IN_SECONDS = 30
 
 logger = logging.getLogger(PlayerLoggerName.SONOS_ENVIRONMENT.value)
+
 
 class StreamConsumer(ABC):
 
@@ -32,7 +33,11 @@ class SonosEnvironment(StreamConsumer):
 						f"{self._create_devices_description(self._sonos_devices)}")
 		self._update_db_and_emit(self._sonos_devices, SendEvent.SONOS_SETUP)
 		self.set_sonos_volume_for_all_devices(INITIAL_SONOS_VOLUME)
-		threading.Thread(target=self._monitor_sonos_environment).start()
+		self._monitoring_thread = StoppableThreadWithEvent(self._monitor_sonos_environment)
+
+	def start_sonos_environment_monitoring(self) -> StoppableThread:
+		self._monitoring_thread.start()
+		return self._monitoring_thread
 
 	def set_sonos_volume_for_all_devices(self, volume: int) -> None:
 		def set_sonos_volume_for_all_devices(sonos_devices: SonosDevicesByName):
@@ -83,7 +88,8 @@ class SonosEnvironment(StreamConsumer):
 
 	def _monitor_sonos_environment(self) -> None:
 		while True:
-			time.sleep(SONOS_DISCOVERY_INTERVAL_IN_SECONDS)
+			if self._monitoring_thread.get_exit_event().wait(SONOS_DISCOVERY_INTERVAL_IN_SECONDS):
+				break
 			new_sonos_devices = {}
 			try:
 				new_sonos_devices = self._find_sonos_devices()

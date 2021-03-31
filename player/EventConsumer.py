@@ -1,24 +1,26 @@
 from __future__ import annotations
 
-import threading
-
 from . import *
 
 logger = logging.getLogger(PlayerLoggerName.EVENT_CONSUMER.value)
 
-class EventConsumer(threading.Thread):
+
+class EventConsumer(StoppableThread):
 
 	def __init__(self, args: Namespace, queue_name: str):
 		super(EventConsumer, self).__init__()
+		self._queue_name = queue_name
 		self.redis = redis.from_url(args.redis_url, decode_responses=True)
 		self.redis_pubsub = self.redis.pubsub(ignore_subscribe_messages=True)
-		self.redis_pubsub.subscribe(queue_name)
+		self.redis_pubsub.subscribe(self._queue_name)
 
 	def run(self):
 		try:
 			for message in self.redis_pubsub.listen():
 				try:
-					self.handle_message(message)
+					stopped = self.handle_message(message)
+					if stopped:
+						break
 				except Exception as e:
 					logger.exception('Exception in main loop of %s when handling message: %s', type(self).__name__, message)
 		finally:
@@ -26,14 +28,22 @@ class EventConsumer(threading.Thread):
 			self.redis_pubsub.punsubscribe()
 			self.redis_pubsub.close()
 
-	def handle_message(self, message) -> None:
+	def handle_message(self, message) -> bool:
 		logger.debug('%s received message: %s', type(self).__name__, message)
 		message_dict = json.loads(message['data'])
 		event = ReceiveEvent(message_dict[General.EVENT_NAME])
+		if event == ReceiveEvent.STOP:
+			return True
 		payload = message_dict[General.EVENT_PAYLOAD]
 		sid = message_dict[General.SID]
 		logger.info('%s received event \'%s\' from \'%s\' with payload: %s', type(self).__name__, event.value, sid, payload)
 		self.run_event(event, sid, payload)
+		return False
+
+	def stop(self) -> None:
+		self.redis.publish(self._queue_name, json.dumps({General.EVENT_NAME: ReceiveEvent.STOP.value,
+													General.EVENT_PAYLOAD: {},
+													General.SID: None}))
 
 	@abstractmethod
 	def run_event(self, event: ReceiveEvent, sid: str, payload: Any) -> None: raise NotImplementedError
