@@ -5,8 +5,8 @@ import re
 from random import randint
 from datetime import timedelta, datetime
 
-import pafy
-from pafy.backend_shared import BasePafy
+from pafy.backend_youtube_dl import YtdlPafy
+from pafy import get_playlist
 
 from . import *
 
@@ -117,10 +117,10 @@ class Track(PlayerObserver):
 
 class YouTubeTrack(Track):
 
-	def __init__(self, args: Namespace, player: Player, track_status: TrackStatus, url: str, pafy: BasePafy):
+	def __init__(self, args: Namespace, player: Player, track_status: TrackStatus, url: str, pafy: YtdlPafy):
 		super().__init__(args, player, track_status)
 		self._url = url
-		self._pafy: BasePafy = pafy
+		self._pafy: YtdlPafy = pafy
 		self._expiration_timestamp = self._get_new_expiration_date()
 
 	def _get_new_expiration_date(self) -> datetime:
@@ -137,9 +137,9 @@ class YouTubeTrack(Track):
 		return self._expiration_timestamp < datetime.now()
 
 	@property
-	def _pafy_data(self) -> BasePafy:
+	def _pafy_data(self) -> YtdlPafy:
 		if not self._pafy or self._is_expired():
-			self._pafy: BasePafy = pafy.new(self._url)
+			self._pafy: YtdlPafy = YtdlPafy(self._url)
 			self._expiration_timestamp = self._get_new_expiration_date()
 			logger.info('Resolved youtube video (expires at: %s): %s', self._expiration_timestamp.isoformat(), self._pafy)
 		return self._pafy
@@ -240,20 +240,19 @@ class NullTrack(Track):
 	def get_duration(self) -> int:
 		return 0
 
-
 class TrackFactory:
 	def __init__(self, args: Namespace, player: Player):
 		self._args = args
 		self._player = player
 
 	def create_youtube_track(self, url: str, track_status=TrackStatus.STOPPED, lazy_load=False) -> YouTubeTrack:
-		pafy_data: BasePafy = None
+		pafy_data: YtdlPafy = None
 		if not lazy_load:
-			pafy_data = pafy.new(url)
+			pafy_data = YtdlPafy(url)
 		return YouTubeTrack(self._args, self._player, track_status, url, pafy_data)
 
 	def create_youtube_tracks_from_playlist(self, preprocessed_url: str) -> List[YouTubeTrack]:
-		playlist = pafy.get_playlist(preprocessed_url)
+		playlist = get_playlist(preprocessed_url)
 		playlist_items = playlist['items']
 		if not playlist_items:
 			logger.warning('Playlist at URL \'{}\' exists but does not contain any items. Resolved playlist: {}'
